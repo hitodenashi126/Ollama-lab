@@ -88,7 +88,11 @@
   }
   
   .skeleton {
-    @apply relative overflow-hidden bg-white/5 dark:bg-white/5 light:bg-black/5 rounded-lg;
+    @apply relative overflow-hidden bg-white/5 rounded-lg;
+  }
+
+  .glass-light .skeleton, .solid-light .skeleton {
+    @apply bg-black/5;
   }
 
   .skeleton::after {
