@@ -1,6 +1,6 @@
 {
-  "name": "Ollama Web Client",
-  "description": "A modern, high-performance web interface for interacting with Ollama AI models, featuring real-time chat, model management, and advanced settings.",
+  "name": "Nexus AI: Intelligent Ollama Interface",
+  "description": "A high-performance local AI playground. Features real-time chat with Ollama models, session management, markdown exports, and advanced model configuration in a sleek, modern UI.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }
