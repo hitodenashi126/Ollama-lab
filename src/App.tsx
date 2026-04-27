@@ -26,6 +26,7 @@ export default function App() {
   });
 
   const [models, setModels] = React.useState<OllamaModel[]>([]);
+  const [isConnected, setIsConnected] = React.useState(false);
   const [selectedModel, setSelectedModel] = React.useState<string>(() => {
     return localStorage.getItem('ollama_selected_model') || '';
   });
@@ -74,17 +75,49 @@ export default function App() {
   // Fetch models
   const fetchModels = React.useCallback(async () => {
     setIsLoadingModels(true);
-    const fetchedModels = await listModels(settings.baseUrl);
-    setModels(fetchedModels);
-    if (!selectedModel && fetchedModels.length > 0) {
-      setSelectedModel(fetchedModels[0].name);
+    try {
+      const fetchedModels = await listModels(settings.baseUrl);
+      if (fetchedModels.length > 0) {
+        setModels(fetchedModels);
+        setIsConnected(true);
+        if (!selectedModel) {
+          setSelectedModel(fetchedModels[0].name);
+        }
+      } else {
+        // If listModels returns [] it might be an error or just no models
+        // But listModels catch block returns [], so we check response in listModels if possible
+        // Actually listModels in current implementation returns [] on error.
+        // Let's assume [] means potentially disconnected if no models exist, 
+        // but normally Ollama has at least one model or it confirms it's up.
+        // Wait, if it's up but 0 models, it's still connected.
+        // Let's modify listModels to be more descriptive or check connection here.
+        
+        // For now, let's look at listModels output. It logs error to console.
+        // We can check if it's truly connected by a simple fetch.
+        const response = await fetch(`${settings.baseUrl}/api/tags`).catch(() => null);
+        setIsConnected(!!response?.ok);
+      }
+    } catch (error) {
+      setIsConnected(false);
+    } finally {
+      setIsLoadingModels(false);
     }
-    setIsLoadingModels(false);
   }, [settings.baseUrl, selectedModel]);
 
   React.useEffect(() => {
     fetchModels();
   }, [fetchModels]);
+
+  // Polling for connection if disconnected
+  React.useEffect(() => {
+    if (isConnected) return;
+
+    const interval = setInterval(() => {
+      fetchModels();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isConnected, fetchModels]);
 
   const handleNewSession = () => {
     const newSession: ChatSession = {
@@ -197,7 +230,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen w-full relative overflow-hidden text-[var(--text-main)] selection:bg-blue-500 selection:text-white">
+    <div className="flex h-[100dvh] w-full relative overflow-hidden text-[var(--text-main)] selection:bg-blue-500 selection:text-white">
       {/* Mesh Gradient Background */}
       <div className="mesh-gradient absolute inset-0 z-0" />
       
@@ -243,9 +276,11 @@ export default function App() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e] animate-pulse" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 hidden sm:inline">
-                  Local Instance Connected
+                <div className={`w-2 h-2 rounded-full animate-pulse transition-all duration-500 ${
+                  isConnected ? "bg-green-500 shadow-[0_0_8px_#22c55e]" : "bg-red-500 shadow-[0_0_8px_#ef4444]"
+                }`} />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 hidden sm:inline transition-colors">
+                  {isConnected ? 'Local Instance Connected' : 'Ollama Offline - Retrying...'}
                 </span>
               </div>
             </header>

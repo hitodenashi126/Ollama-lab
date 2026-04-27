@@ -123,7 +123,7 @@ function MessageItem({ message }: { message: Message }) {
           {isAssistant && message.content && (
             <button
               onClick={copyToClipboard}
-              className="absolute top-3 right-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5"
+              className="absolute top-3 right-3 p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5"
               title="Copy message"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
