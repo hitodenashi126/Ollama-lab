@@ -1,5 +1,5 @@
 import { ChatSession, OllamaModel, Settings } from '../types';
-import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, ChevronLeft, ChevronRight, Edit2, Check, X } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -10,6 +10,7 @@ interface SidebarProps {
   onSelectSession: (id: string) => void;
   onNewSession: () => void;
   onDeleteSession: (id: string) => void;
+  onRenameSession: (id: string, newTitle: string) => void;
   models: OllamaModel[];
   selectedModel: string;
   onSelectModel: (name: string) => void;
@@ -25,6 +26,7 @@ export default function Sidebar({
   onSelectSession,
   onNewSession,
   onDeleteSession,
+  onRenameSession,
   models,
   selectedModel,
   onSelectModel,
@@ -34,6 +36,25 @@ export default function Sidebar({
   onToggleMobile
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [editingSessionId, setEditingSessionId] = React.useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = React.useState('');
+
+  const startEditing = (session: ChatSession) => {
+    setEditingSessionId(session.id);
+    setEditingTitle(session.title);
+  };
+
+  const handleRename = (id: string) => {
+    if (editingTitle.trim()) {
+      onRenameSession(id, editingTitle.trim());
+    }
+    setEditingSessionId(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingSessionId(null);
+    setEditingTitle('');
+  };
 
   return (
     <>
@@ -98,31 +119,73 @@ export default function Sidebar({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-6">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         <section>
           {!isCollapsed && <h2 className="px-3 text-[10px] uppercase font-bold text-neutral-500 dark:text-neutral-500 tracking-widest mb-3">Recent Chats</h2>}
           <div className="space-y-1">
             {sessions.map((session) => (
               <div key={session.id} className="group relative">
-                <button
-                  onClick={() => onSelectSession(session.id)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left",
-                    currentSessionId === session.id
-                      ? "bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30"
-                      : "text-neutral-500 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--text-main)] transition-colors"
-                  )}
-                >
-                  <MessageSquare className="w-4 h-4 shrink-0 opacity-60" />
-                  {!isCollapsed && <span className="truncate pr-4 transition-colors">{session.title}</span>}
-                </button>
-                {!isCollapsed && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDeleteSession(session.id); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all rounded-md hover:bg-red-500/10"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                {editingSessionId === session.id ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 -my-1 rounded-xl bg-black/5 dark:bg-white/5 border border-[var(--accent)]/30">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editingTitle}
+                      onChange={(e) => setEditingTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleRename(session.id);
+                        if (e.key === 'Escape') cancelEditing();
+                      }}
+                      className="flex-1 bg-transparent border-none text-sm focus:ring-0 p-0 text-[var(--text-main)]"
+                    />
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => handleRename(session.id)}
+                        className="p-1 hover:text-green-500 transition-colors"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={cancelEditing}
+                        className="p-1 hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => onSelectSession(session.id)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left pr-16",
+                        currentSessionId === session.id
+                          ? "bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30"
+                          : "text-neutral-500 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--text-main)] transition-colors"
+                      )}
+                    >
+                      <MessageSquare className="w-4 h-4 shrink-0 opacity-60" />
+                      {!isCollapsed && <span className="truncate transition-colors">{session.title}</span>}
+                    </button>
+                    {!isCollapsed && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startEditing(session); }}
+                          className="p-1.5 hover:text-[var(--accent)] transition-all rounded-md hover:bg-[var(--accent)]/10 text-neutral-500"
+                          title="Rename"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDeleteSession(session.id); }}
+                          className="p-1.5 hover:text-red-400 transition-all rounded-md hover:bg-red-500/10 text-neutral-500"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ))}

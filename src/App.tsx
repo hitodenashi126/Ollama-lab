@@ -139,6 +139,10 @@ export default function App() {
     }
   };
 
+  const handleRenameSession = (id: string, newTitle: string) => {
+    setSessions(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s));
+  };
+
   const handleSendMessage = async (content: string, images?: string[]) => {
     if (!selectedModel) {
       alert('Please select a model first');
@@ -248,6 +252,7 @@ export default function App() {
               setIsMobileMenuOpen(false);
             }}
             onDeleteSession={handleDeleteSession}
+            onRenameSession={handleRenameSession}
             models={models}
             selectedModel={selectedModel}
             onSelectModel={setSelectedModel}
