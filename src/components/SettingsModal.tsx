@@ -31,24 +31,24 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative bg-white/90 dark:bg-[#0a0c10]/80 backdrop-blur-2xl w-full max-w-xl rounded-3xl border border-black/10 dark:border-white/10 shadow-2xl overflow-hidden shadow-black/20 dark:shadow-black/60 transition-colors duration-300"
+        className="relative bg-[var(--surface)] backdrop-blur-2xl w-full max-w-xl rounded-3xl border border-[var(--surface-border)] shadow-2xl overflow-hidden shadow-black/20 dark:shadow-black/60 transition-colors duration-300"
       >
-        <div className="p-6 border-b border-black/5 dark:border-white/10 flex items-center justify-between bg-black/[0.02] dark:bg-white/[0.02]">
+        <div className="p-6 border-b border-[var(--surface-border)] flex items-center justify-between bg-black/[0.02] dark:bg-white/[0.02]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
               <SettingsIcon className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">Engine Configuration</h2>
+              <h2 className="font-bold text-lg text-[var(--text-main)] tracking-tight">Engine Configuration</h2>
               <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest">Local Instance Optimized</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-neutral-500 hover:text-white">
+          <button onClick={onClose} className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-neutral-500 hover:text-[var(--text-main)]">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[70vh] space-y-8 bg-gradient-to-b from-white/[0.02] to-transparent">
+        <div className="p-6 overflow-y-auto max-h-[70vh] space-y-8 bg-gradient-to-b from-black/[0.01] dark:from-white/[0.02] to-transparent">
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-neutral-500">
@@ -91,7 +91,7 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
                 type="text"
                 value={formData.baseUrl}
                 onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-mono shadow-inner"
+                className="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-mono shadow-inner"
                 placeholder="http://localhost:11434"
               />
               <div className="flex items-center gap-3 mt-3 px-3 py-2.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl">
@@ -113,7 +113,7 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
               <textarea
                 value={formData.systemPrompt}
                 onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all min-h-[100px] resize-none shadow-inner"
+                className="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all min-h-[100px] resize-none shadow-inner"
               />
             </div>
           </section>
@@ -136,7 +136,7 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
                   step="0.1"
                   value={formData.temperature}
                   onChange={(e) => setFormData({ ...formData, temperature: parseFloat(e.target.value) })}
-                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 />
                 <div className="flex justify-between text-[8px] text-neutral-600 font-bold uppercase tracking-tighter">
                   <span>Literal</span>
@@ -155,7 +155,7 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
                   step="0.05"
                   value={formData.topP}
                   onChange={(e) => setFormData({ ...formData, topP: parseFloat(e.target.value) })}
-                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 />
                  <div className="flex justify-between text-[8px] text-neutral-600 font-bold uppercase tracking-tighter">
                   <span>Narrow</span>
@@ -166,15 +166,15 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
           </section>
         </div>
 
-        <div className="p-6 bg-white/[0.02] border-t border-white/10 flex items-center justify-between">
-           <div className="flex items-center gap-2 text-blue-500 text-[9px] font-bold uppercase tracking-widest">
+        <div className="p-6 bg-black/[0.02] dark:bg-white/[0.02] border-t border-[var(--surface-border)] flex items-center justify-between">
+           <div className="flex items-center gap-2 text-blue-600 dark:text-blue-500 text-[9px] font-bold uppercase tracking-widest">
              <ShieldCheck className="w-3.5 h-3.5" />
              End-to-End Local Privacy
            </div>
           <div className="flex gap-4">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold text-neutral-400 hover:text-white transition-all uppercase tracking-widest"
+              className="px-6 py-2.5 rounded-xl text-xs font-bold text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] transition-all uppercase tracking-widest"
             >
               Discard
             </button>

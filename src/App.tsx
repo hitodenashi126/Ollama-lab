@@ -196,12 +196,12 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen w-full relative overflow-hidden text-neutral-100 selection:bg-blue-500 selection:text-white">
+    <div className="flex h-screen w-full relative overflow-hidden text-[var(--text-main)] selection:bg-blue-500 selection:text-white">
       {/* Mesh Gradient Background */}
       <div className="mesh-gradient absolute inset-0 z-0" />
       
       <div className="flex w-full h-full relative z-10 md:p-4 lg:p-6 md:gap-4 lg:gap-6">
-        <div className="flex w-full h-full bg-white/40 dark:bg-white/[0.03] backdrop-blur-3xl md:border md:border-black/5 dark:border-white/10 md:rounded-[32px] overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/50 transition-colors">
+        <div className="flex w-full h-full bg-[var(--surface)] backdrop-blur-3xl md:border md:border-[var(--surface-border)] md:rounded-[32px] overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/50 transition-colors">
           <Sidebar
             sessions={sessions}
             currentSessionId={currentSessionId}
@@ -224,7 +224,7 @@ export default function App() {
           />
 
           <main className="flex-1 flex flex-col min-w-0 relative h-full">
-            <header className="h-16 border-b border-white/10 flex items-center justify-between bg-white/[0.02] px-4 md:px-6 shrink-0 relative z-10 transition-colors">
+            <header className="h-16 border-b border-[var(--surface-border)] flex items-center justify-between bg-white/[0.01] px-4 md:px-6 shrink-0 relative z-10 transition-colors">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsMobileMenuOpen(true)}
@@ -233,7 +233,7 @@ export default function App() {
                   <Menu className="w-5 h-5" />
                 </button>
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-neutral-900 dark:text-white transition-colors">
+                  <span className="text-sm font-semibold text-[var(--text-main)] transition-colors">
                     {currentSession?.title || 'No active session'}
                   </span>
                   <span className="text-[10px] text-neutral-400 font-medium uppercase tracking-wider">
