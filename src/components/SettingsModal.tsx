@@ -166,21 +166,21 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
           </section>
         </div>
 
-        <div className="p-6 bg-black/[0.02] dark:bg-white/[0.02] border-t border-[var(--surface-border)] flex items-center justify-between">
+        <div className="p-4 sm:p-6 bg-black/[0.02] dark:bg-white/[0.02] border-t border-[var(--surface-border)] flex flex-col sm:flex-row items-center justify-between gap-4">
            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-500 text-[9px] font-bold uppercase tracking-widest">
              <ShieldCheck className="w-3.5 h-3.5" />
              End-to-End Local Privacy
            </div>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] transition-all uppercase tracking-widest"
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] transition-all uppercase tracking-widest"
             >
               Discard
             </button>
             <button
               onClick={handleSave}
-              className="px-8 py-3 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-600/20 active:scale-[0.98] transition-all uppercase tracking-widest"
+              className="flex-1 sm:flex-none px-4 sm:px-8 py-3 rounded-xl text-[10px] sm:text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 shadow-xl shadow-blue-600/20 active:scale-[0.98] transition-all uppercase tracking-widest whitespace-nowrap"
             >
               Save Pipeline
             </button>

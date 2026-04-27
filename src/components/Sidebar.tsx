@@ -1,5 +1,5 @@
 import { ChatSession, OllamaModel, Settings } from '../types';
-import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, ChevronLeft, ChevronRight, Edit2, Check, X } from 'lucide-react';
+import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, ChevronLeft, ChevronRight, Edit2, Check, X, Download, FileJson } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -54,6 +54,38 @@ export default function Sidebar({
   const cancelEditing = () => {
     setEditingSessionId(null);
     setEditingTitle('');
+  };
+
+  const exportSession = (session: ChatSession, format: 'json' | 'md') => {
+    let content = '';
+    let mimeType = '';
+    let fileName = `${session.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export`;
+
+    if (format === 'json') {
+      content = JSON.stringify(session, null, 2);
+      mimeType = 'application/json';
+      fileName += '.json';
+    } else {
+      content = `# ${session.title}\n\n`;
+      session.messages.forEach(msg => {
+        const role = msg.role === 'user' ? 'User' : 'Assistant';
+        content += `### ${role} (${new Date(msg.timestamp).toLocaleString()})\n\n${msg.content}\n\n`;
+        if (msg.images && msg.images.length > 0) {
+          content += `*Attached Images: ${msg.images.length} (not included in flat text export)*\n\n`;
+        }
+        content += `---\n\n`;
+      });
+      mimeType = 'text/markdown';
+      fileName += '.md';
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -169,6 +201,20 @@ export default function Sidebar({
                     </button>
                     {!isCollapsed && (
                       <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); exportSession(session, 'md'); }}
+                          className="p-1.5 hover:text-green-500 transition-all rounded-md hover:bg-green-500/10 text-neutral-500"
+                          title="Export as Markdown"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); exportSession(session, 'json'); }}
+                          className="p-1.5 hover:text-blue-500 transition-all rounded-md hover:bg-blue-500/10 text-neutral-500"
+                          title="Export as JSON"
+                        >
+                          <FileJson className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); startEditing(session); }}
                           className="p-1.5 hover:text-[var(--accent)] transition-all rounded-md hover:bg-[var(--accent)]/10 text-neutral-500"

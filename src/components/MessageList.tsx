@@ -1,9 +1,11 @@
 import React from 'react';
 import { Message } from '../types';
 import ReactMarkdown from 'react-markdown';
-import { Bot, User, Copy, Check } from 'lucide-react';
+import { Bot, User, Copy, Check, Save } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface MessageListProps {
   messages: Message[];
@@ -73,6 +75,16 @@ function MessageItem({ message }: { message: Message }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const saveToFile = () => {
+    const blob = new Blob([message.content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `response_${new Date().getTime()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -117,17 +129,62 @@ function MessageItem({ message }: { message: Message }) {
             </div>
           )}
           <div className={cn("markdown-body", !isAssistant && "text-right")}>
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+            <ReactMarkdown
+              components={{
+                code({ node, inline, className, children, ...props }: any) {
+                  const match = /language-(\w+)/.exec(className || '');
+                  return !inline && match ? (
+                    <div className="relative group/code my-4">
+                      <div className="absolute right-2 top-2 z-10 opacity-0 group-hover/code:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
+                          }}
+                          className="p-1 rounded bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-colors"
+                          title="Copy code"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <SyntaxHighlighter
+                        style={atomDark}
+                        language={match[1]}
+                        PreTag="div"
+                        className="rounded-xl !bg-neutral-900 !p-4 border border-white/5"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, '')}
+                      </SyntaxHighlighter>
+                    </div>
+                  ) : (
+                    <code className={cn("bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded text-sm", className)} {...props}>
+                      {children}
+                    </code>
+                  );
+                }
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
           </div>
           
           {isAssistant && message.content && (
-            <button
-              onClick={copyToClipboard}
-              className="absolute top-3 right-3 p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5"
-              title="Copy message"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-            </button>
+            <div className="absolute top-3 right-3 flex items-center gap-2">
+              <button
+                onClick={saveToFile}
+                className="p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5"
+                title="Save as markdown file"
+              >
+                <Save className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={copyToClipboard}
+                className="p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5"
+                title="Copy message"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
           )}
         </div>
         <div className={cn(
