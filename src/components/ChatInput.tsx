@@ -94,10 +94,7 @@ export default function ChatInput({ onSend, disabled, selectedModel }: ChatInput
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
+    // Sending on Enter disabled as per user request
   };
 
   React.useEffect(() => {
