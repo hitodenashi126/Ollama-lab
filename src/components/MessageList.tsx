@@ -44,12 +44,12 @@ export default function MessageList({ messages, isTyping }: MessageListProps) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex gap-4 max-w-3xl mx-auto items-start"
+            className="flex flex-col gap-2 max-w-3xl mx-auto items-start"
           >
             <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
               <Bot className="w-5 h-5 text-blue-500" />
             </div>
-            <div className="flex-1 pt-3.5 space-y-2">
+            <div className="w-[90%] pt-2 space-y-2">
               <div className="flex gap-1.5">
                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" />
                 <span className="w-1.5 h-1.5 bg-blue-500/60 rounded-full animate-bounce [animation-delay:0.2s]" />
@@ -78,8 +78,8 @@ function MessageItem({ message }: { message: Message }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "flex gap-4 max-w-3xl mx-auto group",
-        !isAssistant && "flex-row-reverse"
+        "flex flex-col gap-2 max-w-3xl mx-auto group",
+        !isAssistant && "items-end"
       )}
     >
       <div 
@@ -94,17 +94,17 @@ function MessageItem({ message }: { message: Message }) {
       </div>
       
       <div className={cn(
-        "flex-1 space-y-2 max-w-[calc(100%-3rem)]",
-        !isAssistant && "text-right"
+        "space-y-2",
+        isAssistant ? "w-[90%]" : "w-full flex flex-col items-end"
       )}>
         <div className={cn(
-          "relative p-5 rounded-2xl transition-all",
+          "relative p-5 rounded-2xl transition-all w-full",
           isAssistant 
             ? "bg-[var(--surface)] border border-[var(--surface-border)] shadow-xl shadow-black/5" 
-            : "bg-blue-600/10 dark:bg-blue-600/20 border border-blue-500/30 text-[var(--text-main)] transition-colors"
+            : "bg-blue-600/10 dark:bg-blue-600/20 border border-blue-500/30 text-[var(--text-main)] transition-colors text-right"
         )}>
           {message.images && message.images.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className={cn("flex flex-wrap gap-2 mb-4", !isAssistant && "justify-end")}>
               {message.images.map((img, i) => (
                 <img 
                   key={i} 
@@ -116,7 +116,7 @@ function MessageItem({ message }: { message: Message }) {
               ))}
             </div>
           )}
-          <div className="markdown-body">
+          <div className={cn("markdown-body", !isAssistant && "text-right")}>
             <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
           
