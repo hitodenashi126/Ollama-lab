@@ -106,7 +106,7 @@ export default function App() {
     }
   };
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, images?: string[]) => {
     if (!selectedModel) {
       alert('Please select a model first');
       return;
@@ -133,6 +133,7 @@ export default function App() {
     const userMessage: Message = {
       role: 'user',
       content,
+      images,
       timestamp: Date.now(),
     };
 

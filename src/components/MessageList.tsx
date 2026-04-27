@@ -103,6 +103,19 @@ function MessageItem({ message }: { message: Message }) {
             ? "bg-[var(--surface)] border border-[var(--surface-border)] shadow-xl shadow-black/5" 
             : "bg-blue-600/10 dark:bg-blue-600/20 border border-blue-500/30 text-[var(--text-main)] transition-colors"
         )}>
+          {message.images && message.images.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {message.images.map((img, i) => (
+                <img 
+                  key={i} 
+                  src={`data:image/jpeg;base64,${img}`} 
+                  alt="Attached" 
+                  className="max-w-[200px] max-h-[200px] rounded-lg border border-[var(--surface-border)] object-cover shadow-sm"
+                  referrerPolicy="no-referrer"
+                />
+              ))}
+            </div>
+          )}
           <div className="markdown-body">
             <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>

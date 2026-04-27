@@ -35,7 +35,7 @@ export async function chatStream(
       model,
       messages: [
         { role: 'system', content: settings.systemPrompt },
-        ...messages.map(({ role, content }) => ({ role, content }))
+        ...messages.map(({ role, content, images }) => ({ role, content, images }))
       ],
       options: {
         temperature: settings.temperature,
