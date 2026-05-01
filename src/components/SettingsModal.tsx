@@ -1,6 +1,6 @@
 import React from 'react';
 import { Settings } from '../types';
-import { X, Server, Layout, Sliders, Info, ShieldCheck, Settings as SettingsIcon, Moon, Sun } from 'lucide-react';
+import { X, Server, Layout, Sliders, Info, ShieldCheck, Settings as SettingsIcon, Moon, Sun, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -94,11 +94,21 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
                 className="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-mono shadow-inner"
                 placeholder="http://localhost:11434"
               />
-              <div className="flex items-center gap-3 mt-3 px-3 py-2.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl">
-                <Info className="w-4 h-4 shrink-0" />
-                <p className="text-[10px] leading-tight font-medium">
-                  Verify <code className="bg-blue-500/20 px-1 rounded text-white">OLLAMA_ORIGINS="*"</code> is enabled in your environment.
-                </p>
+              <div className="flex flex-col gap-2 mt-3">
+                <div className="flex items-center gap-3 px-3 py-2.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl">
+                  <Info className="w-4 h-4 shrink-0" />
+                  <p className="text-[10px] leading-tight font-medium">
+                    Verify <code className="bg-blue-500/20 px-1 rounded text-white">OLLAMA_ORIGINS="*"</code> is enabled in your environment.
+                  </p>
+                </div>
+                {formData.baseUrl.includes('localhost') && (
+                  <div className="flex items-center gap-3 px-3 py-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <p className="text-[10px] leading-tight font-medium">
+                      Mobile users: Replace <code className="bg-amber-500/20 px-1 rounded">localhost</code> with your PC's IP address (e.g., 192.168.1.x).
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </section>

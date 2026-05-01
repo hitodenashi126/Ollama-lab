@@ -7,7 +7,7 @@ import { ChatSession, Message, Settings, OllamaModel } from './types';
 import { DEFAULT_SETTINGS, listModels, chatStream } from './lib/ollama';
 import { v4 as uuidv4 } from 'uuid';
 import { AnimatePresence } from 'motion/react';
-import { Menu } from 'lucide-react';
+import { Menu, AlertTriangle } from 'lucide-react';
 
 export default function App() {
   const [sessions, setSessions] = React.useState<ChatSession[]>(() => {
@@ -36,8 +36,29 @@ export default function App() {
   const [isStreaming, setIsStreaming] = React.useState(false);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [viewportHeight, setViewportHeight] = React.useState('100dvh');
 
   const currentSession = sessions.find(s => s.id === currentSessionId);
+
+  // Handle visual viewport for mobile keyboard
+  React.useEffect(() => {
+    if (!window.visualViewport) return;
+
+    const handleResize = () => {
+      setViewportHeight(`${window.visualViewport?.height}px`);
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    
+    // Initial call
+    handleResize();
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   // Theme effect
   React.useEffect(() => {
@@ -74,6 +95,7 @@ export default function App() {
 
   // Fetch models
   const fetchModels = React.useCallback(async () => {
+    if (isLoadingModels) return;
     setIsLoadingModels(true);
     try {
       const fetchedModels = await listModels(settings.baseUrl);
@@ -84,25 +106,24 @@ export default function App() {
           setSelectedModel(fetchedModels[0].name);
         }
       } else {
-        // If listModels returns [] it might be an error or just no models
-        // But listModels catch block returns [], so we check response in listModels if possible
-        // Actually listModels in current implementation returns [] on error.
-        // Let's assume [] means potentially disconnected if no models exist, 
-        // but normally Ollama has at least one model or it confirms it's up.
-        // Wait, if it's up but 0 models, it's still connected.
-        // Let's modify listModels to be more descriptive or check connection here.
-        
-        // For now, let's look at listModels output. It logs error to console.
-        // We can check if it's truly connected by a simple fetch.
-        const response = await fetch(`${settings.baseUrl}/api/tags`).catch(() => null);
-        setIsConnected(!!response?.ok);
+        // Robust connection check
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        try {
+          const response = await fetch(`${settings.baseUrl}/api/tags`, { signal: controller.signal });
+          setIsConnected(!!response?.ok);
+        } catch (e) {
+          setIsConnected(false);
+        } finally {
+          clearTimeout(timeoutId);
+        }
       }
     } catch (error) {
       setIsConnected(false);
     } finally {
       setIsLoadingModels(false);
     }
-  }, [settings.baseUrl, selectedModel]);
+  }, [settings.baseUrl, selectedModel, isLoadingModels]);
 
   React.useEffect(() => {
     fetchModels();
@@ -234,7 +255,10 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-[100dvh] w-full relative overflow-hidden text-[var(--text-main)] selection:bg-blue-500 selection:text-white">
+    <div 
+      style={{ height: viewportHeight }}
+      className="flex w-full relative overflow-hidden text-[var(--text-main)] selection:bg-blue-500 selection:text-white"
+    >
       {/* Mesh Gradient Background */}
       <div className="mesh-gradient absolute inset-0 z-0" />
       
@@ -294,6 +318,7 @@ export default function App() {
               <MessageList 
                 messages={currentSession?.messages || []} 
                 isTyping={isStreaming}
+                viewportHeight={viewportHeight}
               />
               
               <div className="bg-gradient-to-t from-black/20 to-transparent pt-12">

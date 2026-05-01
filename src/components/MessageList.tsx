@@ -10,16 +10,17 @@ import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 interface MessageListProps {
   messages: Message[];
   isTyping?: boolean;
+  viewportHeight?: string;
 }
 
-export default function MessageList({ messages, isTyping }: MessageListProps) {
+export default function MessageList({ messages, isTyping, viewportHeight }: MessageListProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isTyping]);
+  }, [messages, isTyping, viewportHeight]);
 
   return (
     <div 

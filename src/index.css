@@ -127,6 +127,10 @@
     animation: shimmer 1.5s infinite;
   }
 
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  
   .glass-light .skeleton::after, .solid-light .skeleton::after {
     background: linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent);
   }

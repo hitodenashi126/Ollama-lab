@@ -105,8 +105,8 @@ export default function ChatInput({ onSend, disabled, selectedModel }: ChatInput
   }, [input]);
 
   return (
-    <div className="max-w-3xl mx-auto w-full px-4 pb-4 md:pb-8 pt-2 relative z-20">
-      <div className="relative flex flex-col gap-2 p-2 bg-[var(--surface)] backdrop-blur-xl rounded-2xl border border-[var(--surface-border)] shadow-2xl shadow-black/40 ring-1 ring-white/5 transition-colors">
+    <div className="max-w-3xl mx-auto w-full px-4 pb-safe md:pb-8 pt-2 relative z-20">
+      <div className="mb-4 sm:mb-0 relative flex flex-col gap-2 p-2 bg-[var(--surface)] backdrop-blur-xl rounded-2xl border border-[var(--surface-border)] shadow-2xl shadow-black/40 ring-1 ring-white/5 transition-colors">
         <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--surface-border)] hidden md:flex">
           <Hash className="w-3.5 h-3.5 text-blue-500" />
           <span className="text-[10px] font-bold uppercase tracking-tighter text-neutral-500 dark:text-neutral-400">
