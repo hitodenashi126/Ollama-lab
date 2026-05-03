@@ -2,7 +2,7 @@ export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: number;
-  images?: string[];
+  _hasAttachments?: boolean; // Flag indicating files were attached to this message
 }
 
 export interface ChatSession {
