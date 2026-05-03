@@ -108,7 +108,7 @@ function MessageItem({ message }: { message: Message }) {
       
       <div className={cn(
         "space-y-2",
-        isAssistant ? "w-[90%]" : "w-full flex flex-col items-end"
+        isAssistant ? "w-[100%]" : "w-full flex flex-col items-end"
       )}>
         <div className={cn(
           "relative p-5 rounded-2xl transition-all w-full",
