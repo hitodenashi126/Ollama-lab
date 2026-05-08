@@ -3,6 +3,7 @@ import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, C
 import { cn, formatSize } from '../lib/utils';
 import React from 'react';
 import { Tooltip } from './Tooltip';
+import { LabIcon } from './LabIcon';
 
 interface SidebarProps {
   sessions: ChatSession[];
@@ -112,7 +113,7 @@ export default function Sidebar({
           {!isCollapsed && (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-[var(--accent-bg)] flex items-center justify-center transition-colors">
-                <Cpu className="w-5 h-5 text-[var(--accent-text)]" />
+                <LabIcon size={20} className="text-[var(--accent-text)]" />
               </div>
               <h1 className="font-bold text-lg tracking-tight text-[var(--text-main)] italic">OLLAMA<span className="text-[var(--accent)]">LAB</span></h1>
             </div>

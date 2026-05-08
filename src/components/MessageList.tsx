@@ -2,7 +2,8 @@ import React from 'react';
 import { Message } from '../types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Bot, User, Copy, Check, Save } from 'lucide-react';
+import { LabIcon } from './LabIcon';
+import { User, Copy, Check, Save } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Tooltip } from './Tooltip';
 import { toast } from 'sonner';
@@ -34,7 +35,7 @@ export default function MessageList({ messages, isTyping, viewportHeight, chatSt
       {messages.length === 0 && !isTyping && (
         <div className="h-full flex flex-col items-center justify-center text-neutral-500 space-y-6">
           <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl shadow-black/20">
-            <Bot className="w-10 h-10 stroke-[1.2] text-blue-500" />
+            <LabIcon size={40} className="text-[var(--accent)]" />
           </div>
           <div className="text-center space-y-2">
             <p className="text-lg font-bold text-[var(--text-main)] italic tracking-tight">OLLAMA<span className="text-[var(--accent)]">LAB</span></p>
@@ -55,7 +56,7 @@ export default function MessageList({ messages, isTyping, viewportHeight, chatSt
       {isTyping && (
         <div className="flex flex-col gap-2 max-w-3xl mx-auto items-start animate-slide-in-bottom">
           <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-            <Bot className="w-5 h-5 text-blue-500" />
+            <LabIcon size={20} className="text-[var(--accent)]" />
           </div>
           <div className="w-[90%] pt-2 space-y-2">
             <div className="flex gap-1.5">
@@ -113,7 +114,7 @@ function MessageItem({
            : "bg-[var(--accent-bg)] border-[var(--accent-bg)] text-[var(--accent-text)] shadow-lg"
         )}
       >
-        {isAssistant ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
+        {isAssistant ? <LabIcon size={20} /> : <User className="w-5 h-5" />}
       </div>
       
         <div className={cn(

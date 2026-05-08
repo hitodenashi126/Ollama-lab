@@ -1,5 +1,6 @@
 import React from 'react';
 import Sidebar from './components/Sidebar';
+import { LabIcon } from './components/LabIcon';
 import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
 import SettingsModal from './components/SettingsModal';
@@ -383,7 +384,8 @@ export default function App() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full animate-pulse transition-all duration-500 ${
+                <LabIcon size={20} className={isConnected ? "text-green-500" : "text-red-500"} />
+                <div className={`w-1.5 h-1.5 rounded-full animate-pulse transition-all duration-500 ${
                   isConnected ? "bg-green-500 shadow-[0_0_8px_#22c55e]" : "bg-red-500 shadow-[0_0_8px_#ef4444]"
                 }`} />
                 <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 hidden sm:inline transition-colors">
