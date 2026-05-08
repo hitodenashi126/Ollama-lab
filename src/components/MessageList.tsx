@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Bot, User, Copy, Check, Save } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { Tooltip } from './Tooltip';
 import { toast } from 'sonner';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -132,19 +133,22 @@ function MessageItem({
                   components={{
                     code({ node, inline, className, children, ...props }: any) {
                       const match = /language-(\w+)/.exec(className || '');
+                      const codeContent = String(children).replace(/\n$/, '');
                       return !inline && match ? (
                         <div className="relative group/code my-4">
-                          <div className="absolute right-2 top-2 z-10 opacity-100 md:opacity-0 md:group-hover/code:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
-                                toast.success('Code copied to clipboard');
-                              }}
-                              className="p-1 rounded bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-colors active:scale-95"
-                              title="Copy code"
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
+                          <div className="absolute right-2 top-2 z-10 flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover/code:opacity-100 transition-opacity">
+                            <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest">{match[1]}</span>
+                            <Tooltip content="Copy Code" position="top">
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(codeContent);
+                                  toast.success('Code copied to clipboard');
+                                }}
+                                className="p-1.5 rounded bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-colors active:scale-95 border border-white/5"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            </Tooltip>
                           </div>
                           <SyntaxHighlighter
                             style={atomDark}
@@ -153,7 +157,7 @@ function MessageItem({
                             className="rounded-lg !bg-neutral-900 !p-4 border border-white/5"
                             {...props}
                           >
-                            {String(children).replace(/\n$/, '')}
+                            {codeContent}
                           </SyntaxHighlighter>
                         </div>
                       ) : (
@@ -169,27 +173,31 @@ function MessageItem({
               </div>
               
               {isAssistant && message.content && (
-                <div className="absolute top-3 right-3 flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => {
-                      saveToFile();
-                      toast.success('Message saved as markdown');
-                    }}
-                    className="p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5 active:scale-90"
-                    title="Save as markdown file"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      copyToClipboard();
-                      toast.success('Message copied to clipboard');
-                    }}
-                    className="p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5 active:scale-90"
-                    title="Copy message"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
+                <div className="mt-4 pt-3 border-t border-[var(--surface-border)] flex items-center gap-3">
+                  <Tooltip content="Copy Response" position="top">
+                    <button
+                      onClick={() => {
+                        copyToClipboard();
+                        toast.success('Response copied to clipboard');
+                      }}
+                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-all active:scale-95"
+                    >
+                      {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                      Copy
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Save as Markdown" position="top">
+                    <button
+                      onClick={() => {
+                        saveToFile();
+                        toast.success('Response saved as markdown');
+                      }}
+                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-all active:scale-95"
+                    >
+                      <Save className="w-3 h-3" />
+                      Export
+                    </button>
+                  </Tooltip>
                 </div>
               )}
             </div>
@@ -201,19 +209,22 @@ function MessageItem({
                   components={{
                     code({ node, inline, className, children, ...props }: any) {
                       const match = /language-(\w+)/.exec(className || '');
+                      const codeContent = String(children).replace(/\n$/, '');
                       return !inline && match ? (
                         <div className="relative group/code my-4">
-                          <div className="absolute right-2 top-2 z-10 opacity-100 md:opacity-0 md:group-hover/code:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
-                                toast.success('Code copied to clipboard');
-                              }}
-                              className="p-1 rounded bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-colors active:scale-95"
-                              title="Copy code"
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
+                          <div className="absolute right-2 top-2 z-10 flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover/code:opacity-100 transition-opacity">
+                             <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest">{match[1]}</span>
+                            <Tooltip content="Copy Code" position="top">
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(codeContent);
+                                  toast.success('Code copied to clipboard');
+                                }}
+                                className="p-1.5 rounded bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-colors active:scale-95 border border-white/5"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            </Tooltip>
                           </div>
                           <SyntaxHighlighter
                             style={atomDark}
@@ -222,7 +233,7 @@ function MessageItem({
                             className="rounded-lg !bg-neutral-900 !p-4 border border-white/5"
                             {...props}
                           >
-                            {String(children).replace(/\n$/, '')}
+                            {codeContent}
                           </SyntaxHighlighter>
                         </div>
                       ) : (
@@ -238,27 +249,31 @@ function MessageItem({
               </div>
               
               {isAssistant && message.content && (
-                <div className="flex items-center gap-3 mt-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                   <button
-                    onClick={() => {
-                      copyToClipboard();
-                      toast.success('Message copied to clipboard');
-                    }}
-                    className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-blue-500 transition-colors active:scale-95"
-                  >
-                    {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                    Copy
-                  </button>
-                  <button
-                    onClick={() => {
-                      saveToFile();
-                      toast.success('Message saved as markdown');
-                    }}
-                    className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-blue-500 transition-colors active:scale-95"
-                  >
-                    <Save className="w-3 h-3" />
-                    Save
-                  </button>
+                <div className="flex items-center gap-4 mt-3">
+                  <Tooltip content="Copy Response" position="bottom">
+                    <button
+                      onClick={() => {
+                        copyToClipboard();
+                        toast.success('Response copied to clipboard');
+                      }}
+                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-colors active:scale-95"
+                    >
+                      {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                      Copy
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Save as Markdown" position="bottom">
+                    <button
+                      onClick={() => {
+                        saveToFile();
+                        toast.success('Response saved as markdown');
+                      }}
+                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-colors active:scale-95"
+                    >
+                      <Save className="w-3 h-3" />
+                      Export
+                    </button>
+                  </Tooltip>
                 </div>
               )}
             </div>
