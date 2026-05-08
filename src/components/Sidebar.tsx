@@ -1,5 +1,5 @@
 import { ChatSession, OllamaModel, Settings } from '../types';
-import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, ChevronLeft, ChevronRight, Edit2, Check, X, Download, FileJson } from 'lucide-react';
+import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, ChevronLeft, ChevronRight, Edit2, Check, X, Download, FileJson, MoreVertical } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
 import React from 'react';
 import { Tooltip } from './Tooltip';
@@ -30,6 +30,16 @@ export default function Sidebar({
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [editingSessionId, setEditingSessionId] = React.useState<string | null>(null);
   const [editingTitle, setEditingTitle] = React.useState('');
+  const [menuOpenId, setMenuOpenId] = React.useState<string | null>(null);
+
+  // Close menu on click outside
+  React.useEffect(() => {
+    const handleClickOutside = () => setMenuOpenId(null);
+    if (menuOpenId) {
+      window.addEventListener('click', handleClickOutside);
+    }
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, [menuOpenId]);
 
   const startEditing = (session: ChatSession) => {
     setEditingSessionId(session.id);
@@ -116,7 +126,7 @@ export default function Sidebar({
                   setIsCollapsed(!isCollapsed);
                 }
               }}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-neutral-400"
+              className="p-2 hover:bg-white/10 rounded-md transition-colors text-neutral-400"
             >
               {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </button>
@@ -128,7 +138,7 @@ export default function Sidebar({
           <button
             onClick={onNewSession}
             className={cn(
-              "w-full flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-[var(--text-main)] rounded-xl py-3 px-4 gap-3 hover:bg-black/10 dark:hover:bg-white/10 transition-all font-medium text-sm shadow-xl shadow-black/10 dark:shadow-black/20",
+              "w-full flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-[var(--text-main)] rounded-lg py-3 px-4 gap-3 hover:bg-black/10 dark:hover:bg-white/10 transition-all font-medium text-sm shadow-xl shadow-black/10 dark:shadow-black/20",
               isCollapsed && "px-3 justify-center"
             )}
           >
@@ -145,7 +155,7 @@ export default function Sidebar({
             {sessions.map((session) => (
               <div key={session.id} className="group relative">
                 {editingSessionId === session.id ? (
-                  <div className="flex items-center gap-2 px-3 py-1.5 -my-1 rounded-xl bg-black/5 dark:bg-white/5 border border-[var(--accent)]/30">
+                  <div className="flex items-center gap-2 px-3 py-1.5 -my-1 rounded-lg bg-black/5 dark:bg-white/5 border border-[var(--accent)]/30">
                     <input
                       autoFocus
                       type="text"
@@ -177,7 +187,7 @@ export default function Sidebar({
                     <button
                       onClick={() => onSelectSession(session.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left pr-16 active:scale-[0.98]",
+                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-left pr-16 active:scale-[0.98]",
                         currentSessionId === session.id
                           ? "bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30"
                           : "text-neutral-500 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--text-main)] transition-colors"
@@ -187,40 +197,57 @@ export default function Sidebar({
                       {!isCollapsed && <span className="truncate transition-colors">{session.title}</span>}
                     </button>
                     {!isCollapsed && (
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity translate-z-0">
-                      <Tooltip content="Export Markdown" position="top">
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
                         <button
-                          onClick={(e) => { e.stopPropagation(); exportSession(session, 'md'); }}
-                          className="p-1.5 hover:text-green-500 transition-all rounded-md hover:bg-green-500/10 text-neutral-500 active:scale-90"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuOpenId(menuOpenId === session.id ? null : session.id);
+                          }}
+                          className={cn(
+                            "p-1.5 hover:text-[var(--text-main)] transition-all rounded-md hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 active:scale-90",
+                            menuOpenId === session.id && "bg-black/10 dark:bg-white/10 text-[var(--text-main)]"
+                          )}
                         >
-                          <Download className="w-3.5 h-3.5" />
+                          <MoreVertical className="w-3.5 h-3.5" />
                         </button>
-                      </Tooltip>
-                      <Tooltip content="Export JSON" position="top">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); exportSession(session, 'json'); }}
-                          className="p-1.5 hover:text-blue-500 transition-all rounded-md hover:bg-blue-500/10 text-neutral-500 active:scale-90"
-                        >
-                          <FileJson className="w-3.5 h-3.5" />
-                        </button>
-                      </Tooltip>
-                      <Tooltip content="Rename" position="top">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); startEditing(session); }}
-                          className="p-1.5 hover:text-[var(--accent)] transition-all rounded-md hover:bg-[var(--accent)]/10 text-neutral-500 active:scale-90"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                      </Tooltip>
-                      <Tooltip content="Delete" position="top">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onDeleteSession(session.id); }}
-                          className="p-1.5 hover:text-red-400 transition-all rounded-md hover:bg-red-500/10 text-neutral-500 active:scale-90"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </Tooltip>
-                    </div>
+
+                        {menuOpenId === session.id && (
+                          <div 
+                            className="absolute right-0 top-full mt-1 w-44 bg-[var(--surface)] border border-[var(--surface-border)] rounded-lg shadow-2xl backdrop-blur-3xl z-[100] py-1 animate-scale-in"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              onClick={(e) => { e.stopPropagation(); startEditing(session); setMenuOpenId(null); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                              Rename Session
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); exportSession(session, 'md'); setMenuOpenId(null); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-green-500 hover:bg-green-500/10 transition-all"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              Export Markdown
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); exportSession(session, 'json'); setMenuOpenId(null); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-blue-500 hover:bg-blue-500/10 transition-all"
+                            >
+                              <FileJson className="w-3.5 h-3.5" />
+                              Export JSON
+                            </button>
+                            <div className="h-px bg-[var(--surface-border)] my-1" />
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onDeleteSession(session.id); setMenuOpenId(null); }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete Session
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </>
                 )}
@@ -234,7 +261,7 @@ export default function Sidebar({
         <button
           onClick={onOpenSettings}
           className={cn(
-            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-[var(--text-main)] transition-all active:scale-[0.98] active:bg-black/10 dark:active:bg-white/20",
+            "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-[var(--text-main)] transition-all active:scale-[0.98] active:bg-black/10 dark:active:bg-white/20",
             isCollapsed && "justify-center px-0"
           )}
         >

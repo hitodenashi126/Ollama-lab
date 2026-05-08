@@ -32,7 +32,7 @@ export default function MessageList({ messages, isTyping, viewportHeight, chatSt
     >
       {messages.length === 0 && !isTyping && (
         <div className="h-full flex flex-col items-center justify-center text-neutral-500 space-y-6">
-          <div className="w-20 h-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl shadow-black/20">
+          <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl shadow-black/20">
             <Bot className="w-10 h-10 stroke-[1.2] text-blue-500" />
           </div>
           <div className="text-center space-y-2">
@@ -53,7 +53,7 @@ export default function MessageList({ messages, isTyping, viewportHeight, chatSt
       
       {isTyping && (
         <div className="flex flex-col gap-2 max-w-3xl mx-auto items-start animate-slide-in-bottom">
-          <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
             <Bot className="w-5 h-5 text-blue-500" />
           </div>
           <div className="w-[90%] pt-2 space-y-2">
@@ -106,7 +106,7 @@ function MessageItem({
     >
       <div 
         className={cn(
-          "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all border",
+          "w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all border",
           isAssistant 
            ? "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/10 text-[var(--accent)]" 
            : "bg-[var(--accent-bg)] border-[var(--accent-bg)] text-[var(--accent-text)] shadow-lg"
@@ -121,7 +121,7 @@ function MessageItem({
         )}>
           {chatStyle === 'boxed' ? (
             <div className={cn(
-              "relative p-5 rounded-2xl transition-all w-full",
+              "relative p-5 rounded-xl transition-all w-full",
               isAssistant 
                 ? "bg-[var(--surface)] border border-[var(--surface-border)] shadow-xl shadow-black/5" 
                 : "bg-blue-600 border border-blue-500 text-white shadow-lg shadow-blue-600/20 text-right"
@@ -150,7 +150,7 @@ function MessageItem({
                             style={atomDark}
                             language={match[1]}
                             PreTag="div"
-                            className="rounded-xl !bg-neutral-900 !p-4 border border-white/5"
+                            className="rounded-lg !bg-neutral-900 !p-4 border border-white/5"
                             {...props}
                           >
                             {String(children).replace(/\n$/, '')}
@@ -219,7 +219,7 @@ function MessageItem({
                             style={atomDark}
                             language={match[1]}
                             PreTag="div"
-                            className="rounded-xl !bg-neutral-900 !p-4 border border-white/5"
+                            className="rounded-lg !bg-neutral-900 !p-4 border border-white/5"
                             {...props}
                           >
                             {String(children).replace(/\n$/, '')}

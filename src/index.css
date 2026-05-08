@@ -1,9 +1,11 @@
 /* Optimized font loading: using local system fonts for maximum speed and offline reliability */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-serif: "Lora", Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 @layer base {
@@ -19,6 +21,7 @@
     --text-main: #f1f5f9;
     --surface: rgba(255, 255, 255, 0.03);
     --surface-border: rgba(255, 255, 255, 0.1);
+    --chat-font-size: 14px;
   }
 
   /* Glass Dark */
@@ -178,7 +181,8 @@
   .animate-scale-in { animation: scale-in 0.2s ease-out forwards; }
   
   .markdown-body {
-    @apply text-sm leading-relaxed space-y-4;
+    font-size: var(--chat-font-size, 14px);
+    @apply leading-relaxed space-y-4;
   }
   
   .markdown-body p {

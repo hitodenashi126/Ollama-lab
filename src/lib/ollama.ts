@@ -10,6 +10,8 @@ export const DEFAULT_SETTINGS: Settings = {
   chatStyle: 'boxed',
   accentColor: '#3b82f6',
   showTimestamp: true,
+  fontFamily: 'sans',
+  fontSize: 14,
 };
 
 export class OllamaError extends Error {

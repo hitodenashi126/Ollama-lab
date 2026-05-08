@@ -79,6 +79,11 @@ export default function App() {
     document.documentElement.style.setProperty('--accent', settings.accentColor);
     document.documentElement.style.setProperty('--accent-bg', settings.accentColor);
     
+    // Set font settings
+    document.documentElement.classList.remove('font-sans', 'font-serif', 'font-mono');
+    document.documentElement.classList.add(`font-${settings.fontFamily}`);
+    document.documentElement.style.setProperty('--chat-font-size', `${settings.fontSize}px`);
+    
     // Add compatibility classes for tailwind utilities
     if (settings.theme.includes('dark')) {
       document.documentElement.classList.add('dark');
@@ -340,7 +345,7 @@ export default function App() {
       <div className="mesh-gradient absolute inset-0 z-0" />
       
       <div className="flex w-full h-full relative z-10 md:p-4 lg:p-6 md:gap-4 lg:gap-6">
-        <div className="flex w-full h-full bg-[var(--surface)] backdrop-blur-3xl md:border md:border-[var(--surface-border)] md:rounded-[32px] overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/50 transition-colors">
+        <div className="flex w-full h-full bg-[var(--surface)] backdrop-blur-3xl md:border md:border-[var(--surface-border)] md:rounded-2xl overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/50 transition-colors">
           <Sidebar
             sessions={sessions}
             currentSessionId={currentSessionId}

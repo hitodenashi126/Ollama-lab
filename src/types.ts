@@ -28,6 +28,8 @@ export interface Settings {
   chatStyle: 'boxed' | 'unboxed';
   accentColor: string;
   showTimestamp: boolean;
+  fontFamily: 'sans' | 'serif' | 'mono';
+  fontSize: number;
 }
 
 export interface OllamaModel {

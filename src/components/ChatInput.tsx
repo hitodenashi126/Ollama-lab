@@ -124,7 +124,7 @@ export default function ChatInput({
 
   return (
     <div className="max-w-3xl mx-auto w-full px-4 pb-safe md:pb-8 pt-2 relative z-20">
-      <div className="mb-4 sm:mb-0 relative flex flex-col bg-[var(--surface)] backdrop-blur-xl rounded-2xl border border-[var(--surface-border)] shadow-2xl shadow-black/40 ring-1 ring-white/5 transition-colors overflow-hidden">
+      <div className="mb-4 sm:mb-0 relative flex flex-col bg-[var(--surface)] backdrop-blur-xl rounded-xl border border-[var(--surface-border)] shadow-2xl shadow-black/40 ring-1 ring-white/5 transition-colors overflow-hidden">
         {attachedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2 px-3 py-2 border-b border-[var(--surface-border)] bg-black/[0.02] dark:bg-white/[0.02]">
             {attachedFiles.map((file, i) => (
@@ -161,14 +161,14 @@ export default function ChatInput({
             <div className="flex items-center gap-1">
               <Tooltip content="Context Search" position="top">
                 <button
-                  className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                  className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-all"
                 >
                   <Hash className="w-4 h-4" />
                 </button>
               </Tooltip>
               <Tooltip content="Browse Files" position="top">
                 <button
-                  className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                  className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-all"
                 >
                   <FileText className="w-4 h-4" />
                 </button>
@@ -188,7 +188,7 @@ export default function ChatInput({
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={disabled}
-                  className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all active:scale-90"
+                  className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-all active:scale-90"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -197,14 +197,14 @@ export default function ChatInput({
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                  className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all active:scale-95"
+                  className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-all active:scale-95"
                 >
                   <span>{selectedModel || 'Select Model'}</span>
                   <ChevronDown className={cn("w-3 h-3 transition-transform", isModelDropdownOpen && "rotate-180")} />
                 </button>
 
                 {isModelDropdownOpen && (
-                  <div className="absolute bottom-full left-0 mb-2 w-48 bg-[var(--surface)] border border-[var(--surface-border)] rounded-xl shadow-xl py-1 z-50 animate-scale-in">
+                  <div className="absolute bottom-full left-0 mb-2 w-48 bg-[var(--surface)] border border-[var(--surface-border)] rounded-lg shadow-xl py-1 z-50 animate-scale-in">
                     {models.length > 0 ? (
                       models.map((model) => (
                         <button
@@ -246,7 +246,7 @@ export default function ChatInput({
                     onClick={() => handleSubmit()}
                     disabled={(!input.trim() && attachedFiles.length === 0) || disabled}
                     className={cn(
-                      "p-1.5 rounded-lg transition-all flex items-center justify-center shrink-0 active:scale-90",
+                      "p-1.5 rounded-md transition-all flex items-center justify-center shrink-0 active:scale-90",
                       (input.trim() || attachedFiles.length > 0) && !disabled 
                         ? "bg-[var(--accent-bg)] text-[var(--accent-text)] hover:opacity-80 translate-y-[-1px] shadow-lg shadow-black/10 active:translate-y-0" 
                         : "bg-black/5 dark:bg-white/5 text-neutral-400 dark:text-neutral-600 cursor-not-allowed border border-black/5 dark:border-white/5"
