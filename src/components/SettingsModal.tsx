@@ -1,12 +1,14 @@
 import React from 'react';
 import { Settings, OllamaModel } from '../types';
+import { DEFAULT_SETTINGS } from '../lib/ollama';
 import { 
   X, Server, Layout, Sliders, Info, ShieldCheck, Settings as SettingsIcon, 
   Moon, Sun, AlertTriangle, Monitor, Palette, Box, MessageSquare, 
-  Database, Download, Trash2, Search, CheckCircle2, Clock 
+  Database, Download, Trash2, Search, CheckCircle2, Clock, RotateCcw 
 } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
 import { toast } from 'sonner';
+import { Tooltip } from './Tooltip';
 
 interface SettingsModalProps {
   settings: Settings;
@@ -37,6 +39,13 @@ export default function SettingsModal({
     onSave(formData);
     toast.success('Configuration saved successfully');
     onClose();
+  };
+
+  const handleRestoreDefaults = () => {
+    if (confirm('Restore all settings to default values? This will reset your theme, accent color, and model parameters.')) {
+      setFormData({ ...DEFAULT_SETTINGS });
+      toast.info('Settings restored to defaults');
+    }
   };
 
   const categories = [
@@ -409,19 +418,30 @@ export default function SettingsModal({
             )}
           </div>
 
-          <div className="p-4 md:p-6 bg-black/[0.02] dark:bg-white/[0.02] border-t border-[var(--surface-border)] flex items-center justify-end gap-4 shrink-0">
-            <button
-              onClick={onClose}
-              className="px-6 py-2.5 rounded-xl text-[10px] font-bold text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] transition-all uppercase tracking-widest"
-            >
-              Discard
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-8 py-3 rounded-xl text-[10px] font-bold bg-[var(--accent)] text-[var(--accent-text)] hover:opacity-80 shadow-xl shadow-[var(--accent)]/20 active:scale-[0.98] transition-all uppercase tracking-widest whitespace-nowrap"
-            >
-              Save Pipeline
-            </button>
+          <div className="p-4 md:p-6 bg-black/[0.02] dark:bg-white/[0.02] border-t border-[var(--surface-border)] flex items-center justify-between shrink-0">
+            <Tooltip content="Revert to factory settings" position="top">
+              <button
+                onClick={handleRestoreDefaults}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-bold text-neutral-500 dark:text-neutral-500 hover:text-red-500 hover:bg-red-500/10 transition-all uppercase tracking-widest active:scale-95"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset Defaults
+              </button>
+            </Tooltip>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={onClose}
+                className="px-6 py-2.5 rounded-xl text-[10px] font-bold text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] transition-all uppercase tracking-widest"
+              >
+                Discard
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-8 py-3 rounded-xl text-[10px] font-bold bg-[var(--accent)] text-[var(--accent-text)] hover:opacity-80 shadow-xl shadow-[var(--accent)]/20 active:scale-[0.98] transition-all uppercase tracking-widest whitespace-nowrap"
+              >
+                Save Pipeline
+              </button>
+            </div>
           </div>
         </div>
       </div>

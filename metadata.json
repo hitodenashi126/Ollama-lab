@@ -1,5 +1,5 @@
 {
-  "name": "Nexus AI: Intelligent Ollama Interface",
+  "name": "Ollama Lab",
   "description": "A high-performance local AI playground. Features real-time chat with Ollama models, session management, markdown exports, and advanced model configuration in a sleek, modern UI.",
   "requestFramePermissions": [],
   "majorCapabilities": []

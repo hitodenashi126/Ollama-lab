@@ -2,6 +2,7 @@ import { ChatSession, OllamaModel, Settings } from '../types';
 import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, ChevronLeft, ChevronRight, Edit2, Check, X, Download, FileJson } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
 import React from 'react';
+import { Tooltip } from './Tooltip';
 
 interface SidebarProps {
   sessions: ChatSession[];
@@ -106,31 +107,35 @@ export default function Sidebar({
               <h1 className="font-bold text-lg tracking-tight text-[var(--text-main)] italic">OLLAMA<span className="text-[var(--accent)]">LAB</span></h1>
             </div>
           )}
-          <button 
-            onClick={() => {
-              if (window.innerWidth < 768) {
-                onToggleMobile();
-              } else {
-                setIsCollapsed(!isCollapsed);
-              }
-            }}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-neutral-400"
-          >
-            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
+          <Tooltip content={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"} position="right">
+            <button 
+              onClick={() => {
+                if (window.innerWidth < 768) {
+                  onToggleMobile();
+                } else {
+                  setIsCollapsed(!isCollapsed);
+                }
+              }}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-neutral-400"
+            >
+              {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </button>
+          </Tooltip>
         </div>
 
       <div className="p-4 shrink-0">
-        <button
-          onClick={onNewSession}
-          className={cn(
-            "w-full flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-[var(--text-main)] rounded-xl py-3 px-4 gap-3 hover:bg-black/10 dark:hover:bg-white/10 transition-all font-medium text-sm shadow-xl shadow-black/10 dark:shadow-black/20",
-            isCollapsed && "px-3 justify-center"
-          )}
-        >
-          <Plus className="w-4 h-4 text-[var(--accent)] stroke-[3]" />
-          {!isCollapsed && <span>New Session</span>}
-        </button>
+        <Tooltip content="Start a fresh chat" position={isCollapsed ? "right" : "bottom"} className={isCollapsed ? "ml-4" : ""}>
+          <button
+            onClick={onNewSession}
+            className={cn(
+              "w-full flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-[var(--text-main)] rounded-xl py-3 px-4 gap-3 hover:bg-black/10 dark:hover:bg-white/10 transition-all font-medium text-sm shadow-xl shadow-black/10 dark:shadow-black/20",
+              isCollapsed && "px-3 justify-center"
+            )}
+          >
+            <Plus className="w-4 h-4 text-[var(--accent)] stroke-[3]" />
+            {!isCollapsed && <span>New Session</span>}
+          </button>
+        </Tooltip>
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
@@ -182,36 +187,40 @@ export default function Sidebar({
                       {!isCollapsed && <span className="truncate transition-colors">{session.title}</span>}
                     </button>
                     {!isCollapsed && (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity translate-z-0">
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity translate-z-0">
+                      <Tooltip content="Export Markdown" position="top">
                         <button
                           onClick={(e) => { e.stopPropagation(); exportSession(session, 'md'); }}
                           className="p-1.5 hover:text-green-500 transition-all rounded-md hover:bg-green-500/10 text-neutral-500 active:scale-90"
-                          title="Export as Markdown"
                         >
                           <Download className="w-3.5 h-3.5" />
                         </button>
+                      </Tooltip>
+                      <Tooltip content="Export JSON" position="top">
                         <button
                           onClick={(e) => { e.stopPropagation(); exportSession(session, 'json'); }}
                           className="p-1.5 hover:text-blue-500 transition-all rounded-md hover:bg-blue-500/10 text-neutral-500 active:scale-90"
-                          title="Export as JSON"
                         >
                           <FileJson className="w-3.5 h-3.5" />
                         </button>
+                      </Tooltip>
+                      <Tooltip content="Rename" position="top">
                         <button
                           onClick={(e) => { e.stopPropagation(); startEditing(session); }}
                           className="p-1.5 hover:text-[var(--accent)] transition-all rounded-md hover:bg-[var(--accent)]/10 text-neutral-500 active:scale-90"
-                          title="Rename"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
+                      </Tooltip>
+                      <Tooltip content="Delete" position="top">
                         <button
                           onClick={(e) => { e.stopPropagation(); onDeleteSession(session.id); }}
                           className="p-1.5 hover:text-red-400 transition-all rounded-md hover:bg-red-500/10 text-neutral-500 active:scale-90"
-                          title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                      </div>
+                      </Tooltip>
+                    </div>
                     )}
                   </>
                 )}

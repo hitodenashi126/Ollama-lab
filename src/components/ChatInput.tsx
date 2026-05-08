@@ -3,6 +3,7 @@ import { Send, Hash, Paperclip, X, FileText, ChevronDown, Plus, Square } from 'l
 import { cn } from '../lib/utils';
 import { FileAttachment, OllamaModel } from '../types';
 import { toast } from 'sonner';
+import { Tooltip } from './Tooltip';
 
 interface ChatInputProps {
   onSend: (message: string, attachments?: FileAttachment[]) => void;
@@ -158,18 +159,20 @@ export default function ChatInput({
 
           <div className="flex items-center justify-between px-2 pb-2">
             <div className="flex items-center gap-1">
-              <button
-                className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
-                title="Search"
-              >
-                <Hash className="w-4 h-4" />
-              </button>
-              <button
-                className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
-                title="Knowledge Base"
-              >
-                <FileText className="w-4 h-4" />
-              </button>
+              <Tooltip content="Context Search" position="top">
+                <button
+                  className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                >
+                  <Hash className="w-4 h-4" />
+                </button>
+              </Tooltip>
+              <Tooltip content="Browse Files" position="top">
+                <button
+                  className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                >
+                  <FileText className="w-4 h-4" />
+                </button>
+              </Tooltip>
               
               <div className="w-px h-4 bg-[var(--surface-border)] mx-1" />
 
@@ -181,14 +184,15 @@ export default function ChatInput({
                 className="hidden"
                 accept={ALLOWED_TEXT_TYPES.join(',')}
               />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={disabled}
-                className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all active:scale-90"
-                title="Attach files"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              <Tooltip content="Attach code or text" position="top">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={disabled}
+                  className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all active:scale-90"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </Tooltip>
 
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -228,26 +232,29 @@ export default function ChatInput({
 
             <div className="flex items-center gap-2">
               {isTyping ? (
-                <button
-                  onClick={onStop}
-                  className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-all active:scale-90"
-                  title="Stop generating"
-                >
-                  <Square className="w-4 h-4 fill-current" />
-                </button>
+                <Tooltip content="Abort generation" position="top">
+                  <button
+                    onClick={onStop}
+                    className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-all active:scale-90"
+                  >
+                    <Square className="w-4 h-4 fill-current" />
+                  </button>
+                </Tooltip>
               ) : (
-                <button
-                  onClick={() => handleSubmit()}
-                  disabled={(!input.trim() && attachedFiles.length === 0) || disabled}
-                  className={cn(
-                    "p-1.5 rounded-lg transition-all flex items-center justify-center shrink-0 active:scale-90",
-                    (input.trim() || attachedFiles.length > 0) && !disabled 
-                      ? "bg-[var(--accent-bg)] text-[var(--accent-text)] hover:opacity-80 translate-y-[-1px] shadow-lg shadow-black/10 active:translate-y-0" 
-                      : "bg-black/5 dark:bg-white/5 text-neutral-400 dark:text-neutral-600 cursor-not-allowed border border-black/5 dark:border-white/5"
-                  )}
-                >
-                  <Send className="w-4 h-4 stroke-[2.5]" />
-                </button>
+                <Tooltip content="Send message" position="top">
+                  <button
+                    onClick={() => handleSubmit()}
+                    disabled={(!input.trim() && attachedFiles.length === 0) || disabled}
+                    className={cn(
+                      "p-1.5 rounded-lg transition-all flex items-center justify-center shrink-0 active:scale-90",
+                      (input.trim() || attachedFiles.length > 0) && !disabled 
+                        ? "bg-[var(--accent-bg)] text-[var(--accent-text)] hover:opacity-80 translate-y-[-1px] shadow-lg shadow-black/10 active:translate-y-0" 
+                        : "bg-black/5 dark:bg-white/5 text-neutral-400 dark:text-neutral-600 cursor-not-allowed border border-black/5 dark:border-white/5"
+                    )}
+                  >
+                    <Send className="w-4 h-4 stroke-[2.5]" />
+                  </button>
+                </Tooltip>
               )}
             </div>
           </div>

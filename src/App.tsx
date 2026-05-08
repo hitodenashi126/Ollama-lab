@@ -97,14 +97,33 @@ export default function App() {
   }, [settings]);
 
   React.useEffect(() => {
-    if (currentSessionId) {
-      localStorage.setItem('ollama_current_session', currentSessionId);
-    }
+    localStorage.setItem('ollama_current_session', currentSessionId || '');
   }, [currentSessionId]);
 
   React.useEffect(() => {
     localStorage.setItem('ollama_selected_model', selectedModel);
   }, [selectedModel]);
+
+  // Sync state across tabs
+  React.useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'ollama_sessions' && e.newValue) {
+        setSessions(JSON.parse(e.newValue));
+      }
+      if (e.key === 'ollama_settings' && e.newValue) {
+        setSettings(JSON.parse(e.newValue));
+      }
+      if (e.key === 'ollama_current_session') {
+        setCurrentSessionId(e.newValue || null);
+      }
+      if (e.key === 'ollama_selected_model') {
+        setSelectedModel(e.newValue || '');
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Fetch models
   const isLoadingRef = React.useRef(false);
