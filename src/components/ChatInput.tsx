@@ -2,6 +2,7 @@ import React from 'react';
 import { Send, Hash, Paperclip, X, FileText, ChevronDown, Plus, Square } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { FileAttachment, OllamaModel } from '../types';
+import { toast } from 'sonner';
 
 interface ChatInputProps {
   onSend: (message: string, attachments?: FileAttachment[]) => void;
@@ -74,7 +75,7 @@ export default function ChatInput({
 
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
-        alert(`File ${file.name} is too large. Max size is 5MB.`);
+        toast.error(`File ${file.name} is too large. Max size is 5MB.`);
         continue;
       }
 
@@ -82,7 +83,7 @@ export default function ChatInput({
       const isText = ALLOWED_TEXT_TYPES.includes(extension) || file.type.startsWith('text/');
 
       if (!isText) {
-        alert(`File type ${extension} is not supported. Please upload text, code, or markdown files.`);
+        toast.error(`File type ${extension} is not supported. Please upload text, code, or markdown files.`);
         continue;
       }
 
@@ -183,7 +184,7 @@ export default function ChatInput({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={disabled}
-                className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all active:scale-90"
                 title="Attach files"
               >
                 <Plus className="w-4 h-4" />
@@ -192,7 +193,7 @@ export default function ChatInput({
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                  className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                  className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all active:scale-95"
                 >
                   <span>{selectedModel || 'Select Model'}</span>
                   <ChevronDown className={cn("w-3 h-3 transition-transform", isModelDropdownOpen && "rotate-180")} />
@@ -229,7 +230,7 @@ export default function ChatInput({
               {isTyping ? (
                 <button
                   onClick={onStop}
-                  className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-all"
+                  className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-all active:scale-90"
                   title="Stop generating"
                 >
                   <Square className="w-4 h-4 fill-current" />
@@ -239,7 +240,7 @@ export default function ChatInput({
                   onClick={() => handleSubmit()}
                   disabled={(!input.trim() && attachedFiles.length === 0) || disabled}
                   className={cn(
-                    "p-1.5 rounded-lg transition-all flex items-center justify-center shrink-0",
+                    "p-1.5 rounded-lg transition-all flex items-center justify-center shrink-0 active:scale-90",
                     (input.trim() || attachedFiles.length > 0) && !disabled 
                       ? "bg-[var(--accent-bg)] text-[var(--accent-text)] hover:opacity-80 translate-y-[-1px] shadow-lg shadow-black/10 active:translate-y-0" 
                       : "bg-black/5 dark:bg-white/5 text-neutral-400 dark:text-neutral-600 cursor-not-allowed border border-black/5 dark:border-white/5"

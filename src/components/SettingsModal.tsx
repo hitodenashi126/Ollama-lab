@@ -6,6 +6,7 @@ import {
   Database, Download, Trash2, Search, CheckCircle2, Clock 
 } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
+import { toast } from 'sonner';
 
 interface SettingsModalProps {
   settings: Settings;
@@ -34,6 +35,7 @@ export default function SettingsModal({
 
   const handleSave = () => {
     onSave(formData);
+    toast.success('Configuration saved successfully');
     onClose();
   };
 
@@ -70,7 +72,7 @@ export default function SettingsModal({
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id as Category)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                  "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98]",
                   activeCategory === cat.id 
                     ? "bg-[var(--accent)] text-[var(--accent-text)] shadow-lg shadow-[var(--accent)]/20" 
                     : "text-neutral-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--text-main)]"
@@ -120,7 +122,7 @@ export default function SettingsModal({
                         key={t.id}
                         onClick={() => setFormData({ ...formData, theme: t.id as any })}
                         className={cn(
-                          "flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all text-center group",
+                          "flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all text-center group active:scale-[0.98]",
                           formData.theme === t.id 
                             ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--accent-text)] shadow-lg shadow-[var(--accent)]/20" 
                             : "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/10 text-neutral-500 hover:border-[var(--accent)]/50"
@@ -191,7 +193,7 @@ export default function SettingsModal({
                         }
                       }}
                       disabled={!!pullProgress || !newModelName.trim()}
-                      className="px-6 py-3 rounded-xl bg-[var(--accent)] text-[var(--accent-text)] text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80 transition-all"
+                      className="px-6 py-3 rounded-xl bg-[var(--accent)] text-[var(--accent-text)] text-xs font-bold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80 active:scale-95 transition-all"
                     >
                       Pull
                     </button>

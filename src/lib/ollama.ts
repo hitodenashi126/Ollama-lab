@@ -21,9 +21,15 @@ export class OllamaError extends Error {
 
 export async function listModels(baseUrl: string): Promise<OllamaModel[]> {
   try {
-    const response = await fetch(`${baseUrl}/api/tags`).catch(err => {
-      throw new OllamaError(`Cannot reach Ollama at ${baseUrl}. Ensure Ollama is running and accessible.`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
+    const response = await fetch(`${baseUrl}/api/tags`, { signal: controller.signal }).catch(err => {
+      if (err.name === 'AbortError') throw new OllamaError(`Connection timed out. Checking Ollama status...`);
+      throw new OllamaError(`Cannot reach Ollama at ${baseUrl}. Ensure Ollama is running.`);
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       if (response.status === 404) {

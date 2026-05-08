@@ -7,6 +7,7 @@ import { ChatSession, Message, Settings, OllamaModel, FileAttachment } from './t
 import { DEFAULT_SETTINGS, listModels, chatStream } from './lib/ollama';
 import { v4 as uuidv4 } from 'uuid';
 import { Menu, AlertTriangle } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 
 export default function App() {
   const [sessions, setSessions] = React.useState<ChatSession[]>(() => {
@@ -180,7 +181,7 @@ export default function App() {
 
   const handleSendMessage = async (content: string, attachments?: FileAttachment[]) => {
     if (!selectedModel) {
-      alert('Please select a model first');
+      toast.error('Please select a model first');
       return;
     }
 
@@ -287,9 +288,10 @@ export default function App() {
         setPullProgress({ status, percentage });
       }));
       fetchModels();
+      toast.success(`Model ${name} pulled successfully`);
     } catch (error) {
       console.error('Failed to pull model:', error);
-      alert('Failed to pull model: ' + (error instanceof Error ? error.message : String(error)));
+      toast.error(`Failed to pull model: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setPullProgress(null);
     }
@@ -300,12 +302,13 @@ export default function App() {
     try {
       await import('./lib/ollama').then(m => m.deleteModel(settings.baseUrl, name));
       fetchModels();
+      toast.success(`Model ${name} deleted`);
       if (selectedModel === name) {
         setSelectedModel(models.find(m => m.name !== name)?.name || '');
       }
     } catch (error) {
       console.error('Failed to delete model:', error);
-      alert('Failed to delete model');
+      toast.error('Failed to delete model');
     }
   };
 
@@ -401,6 +404,7 @@ export default function App() {
           pullProgress={pullProgress}
         />
       )}
+      <Toaster position="top-right" expand={false} richColors />
     </div>
   );
 }

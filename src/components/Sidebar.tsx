@@ -172,7 +172,7 @@ export default function Sidebar({
                     <button
                       onClick={() => onSelectSession(session.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left pr-16",
+                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left pr-16 active:scale-[0.98]",
                         currentSessionId === session.id
                           ? "bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30"
                           : "text-neutral-500 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--text-main)] transition-colors"
@@ -182,31 +182,31 @@ export default function Sidebar({
                       {!isCollapsed && <span className="truncate transition-colors">{session.title}</span>}
                     </button>
                     {!isCollapsed && (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity translate-z-0">
                         <button
                           onClick={(e) => { e.stopPropagation(); exportSession(session, 'md'); }}
-                          className="p-1.5 hover:text-green-500 transition-all rounded-md hover:bg-green-500/10 text-neutral-500"
+                          className="p-1.5 hover:text-green-500 transition-all rounded-md hover:bg-green-500/10 text-neutral-500 active:scale-90"
                           title="Export as Markdown"
                         >
                           <Download className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); exportSession(session, 'json'); }}
-                          className="p-1.5 hover:text-blue-500 transition-all rounded-md hover:bg-blue-500/10 text-neutral-500"
+                          className="p-1.5 hover:text-blue-500 transition-all rounded-md hover:bg-blue-500/10 text-neutral-500 active:scale-90"
                           title="Export as JSON"
                         >
                           <FileJson className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); startEditing(session); }}
-                          className="p-1.5 hover:text-[var(--accent)] transition-all rounded-md hover:bg-[var(--accent)]/10 text-neutral-500"
+                          className="p-1.5 hover:text-[var(--accent)] transition-all rounded-md hover:bg-[var(--accent)]/10 text-neutral-500 active:scale-90"
                           title="Rename"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); onDeleteSession(session.id); }}
-                          className="p-1.5 hover:text-red-400 transition-all rounded-md hover:bg-red-500/10 text-neutral-500"
+                          className="p-1.5 hover:text-red-400 transition-all rounded-md hover:bg-red-500/10 text-neutral-500 active:scale-90"
                           title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -225,7 +225,7 @@ export default function Sidebar({
         <button
           onClick={onOpenSettings}
           className={cn(
-            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-[var(--text-main)] transition-all",
+            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-[var(--text-main)] transition-all active:scale-[0.98] active:bg-black/10 dark:active:bg-white/20",
             isCollapsed && "justify-center px-0"
           )}
         >
