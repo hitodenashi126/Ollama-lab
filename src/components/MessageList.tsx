@@ -3,7 +3,6 @@ import { Message } from '../types';
 import ReactMarkdown from 'react-markdown';
 import { Bot, User, Copy, Check, Save } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -39,29 +38,24 @@ export default function MessageList({ messages, isTyping, viewportHeight }: Mess
         </div>
       )}
       
-      <AnimatePresence initial={false}>
-        {messages.map((message, index) => (
-          <MessageItem key={index} message={message} />
-        ))}
-        {isTyping && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-2 max-w-3xl mx-auto items-start"
-          >
-            <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-              <Bot className="w-5 h-5 text-blue-500" />
+      {messages.map((message, index) => (
+        <MessageItem key={index} message={message} />
+      ))}
+      
+      {isTyping && (
+        <div className="flex flex-col gap-2 max-w-3xl mx-auto items-start animate-slide-in-bottom">
+          <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+            <Bot className="w-5 h-5 text-blue-500" />
+          </div>
+          <div className="w-[90%] pt-2 space-y-2">
+            <div className="flex gap-1.5">
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" />
+              <span className="w-1.5 h-1.5 bg-blue-500/60 rounded-full animate-bounce [animation-delay:0.2s]" />
+              <span className="w-1.5 h-1.5 bg-blue-500/30 rounded-full animate-bounce [animation-delay:0.4s]" />
             </div>
-            <div className="w-[90%] pt-2 space-y-2">
-              <div className="flex gap-1.5">
-                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" />
-                <span className="w-1.5 h-1.5 bg-blue-500/60 rounded-full animate-bounce [animation-delay:0.2s]" />
-                <span className="w-1.5 h-1.5 bg-blue-500/30 rounded-full animate-bounce [animation-delay:0.4s]" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -87,11 +81,9 @@ function MessageItem({ message }: { message: Message }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={cn(
-        "flex flex-col gap-2 max-w-3xl mx-auto group",
+        "flex flex-col gap-2 max-w-3xl mx-auto group animate-slide-in-bottom",
         !isAssistant && "items-end"
       )}
     >
@@ -108,7 +100,7 @@ function MessageItem({ message }: { message: Message }) {
       
       <div className={cn(
         "space-y-2",
-        isAssistant ? "w-[100%]" : "w-full flex flex-col items-end"
+        isAssistant ? "w-[90%]" : "w-full flex flex-col items-end"
       )}>
         <div className={cn(
           "relative p-5 rounded-2xl transition-all w-full",
@@ -116,19 +108,6 @@ function MessageItem({ message }: { message: Message }) {
             ? "bg-[var(--surface)] border border-[var(--surface-border)] shadow-xl shadow-black/5" 
             : "bg-blue-600/10 dark:bg-blue-600/20 border border-blue-500/30 text-[var(--text-main)] transition-colors text-right"
         )}>
-          {message.images && message.images.length > 0 && (
-            <div className={cn("flex flex-wrap gap-2 mb-4", !isAssistant && "justify-end")}>
-              {message.images.map((img, i) => (
-                <img 
-                  key={i} 
-                  src={`data:image/jpeg;base64,${img}`} 
-                  alt="Attached" 
-                  className="max-w-[200px] max-h-[200px] rounded-lg border border-[var(--surface-border)] object-cover shadow-sm"
-                  referrerPolicy="no-referrer"
-                />
-              ))}
-            </div>
-          )}
           <div className={cn("markdown-body", !isAssistant && "text-right")}>
             <ReactMarkdown
               components={{
@@ -198,6 +177,6 @@ function MessageItem({ message }: { message: Message }) {
           {!isAssistant && <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500">Sent</span>}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

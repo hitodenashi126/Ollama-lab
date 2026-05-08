@@ -139,6 +139,43 @@
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
   }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-in-top {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes slide-in-bottom {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes slide-in-left {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes slide-in-right {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes scale-in {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+  .animate-slide-in-top { animation: slide-in-top 0.3s ease-out forwards; }
+  .animate-slide-in-bottom { animation: slide-in-bottom 0.3s ease-out forwards; }
+  .animate-slide-in-left { animation: slide-in-left 0.3s ease-out forwards; }
+  .animate-slide-in-right { animation: slide-in-right 0.3s ease-out forwards; }
+  .animate-scale-in { animation: scale-in 0.2s ease-out forwards; }
   
   .markdown-body {
     @apply text-sm leading-relaxed space-y-4;

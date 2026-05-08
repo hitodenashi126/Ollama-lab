@@ -1,8 +1,13 @@
+export interface FileAttachment {
+  name: string;
+  content: string;
+}
+
 export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: number;
-  _hasAttachments?: boolean; // Flag indicating files were attached to this message
+  attachments?: FileAttachment[];
 }
 
 export interface ChatSession {

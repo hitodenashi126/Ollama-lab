@@ -1,10 +1,5 @@
 {
 	"appId": "com.nexus.ai",
 	"appName": "Nexus AI",
-	"webDir": "dist",
-	"server": {
-		"androidScheme": "http",
-		"hostname": "localhost",
-		"cleartext": true
-	}
+	"webDir": "dist"
 }

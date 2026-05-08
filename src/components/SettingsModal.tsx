@@ -1,7 +1,6 @@
 import React from 'react';
 import { Settings } from '../types';
 import { X, Server, Layout, Sliders, Info, ShieldCheck, Settings as SettingsIcon, Moon, Sun, AlertTriangle } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
 interface SettingsModalProps {
@@ -20,18 +19,12 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+      <div
         onClick={onClose}
-        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        className="absolute inset-0 bg-black/60 backdrop-blur-md animate-fade-in"
       />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative bg-[var(--surface)] backdrop-blur-2xl w-full max-w-xl rounded-3xl border border-[var(--surface-border)] shadow-2xl overflow-hidden shadow-black/20 dark:shadow-black/60 transition-colors duration-300"
+      <div
+        className="relative bg-[var(--surface)] backdrop-blur-2xl w-full max-w-xl rounded-3xl border border-[var(--surface-border)] shadow-2xl overflow-hidden shadow-black/20 dark:shadow-black/60 transition-colors duration-300 animate-scale-in"
       >
         <div className="p-6 border-b border-[var(--surface-border)] flex items-center justify-between bg-black/[0.02] dark:bg-white/[0.02]">
           <div className="flex items-center gap-3">
@@ -196,7 +189,7 @@ export default function SettingsModal({ settings, onSave, onClose }: SettingsMod
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

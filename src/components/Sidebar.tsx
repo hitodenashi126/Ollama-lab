@@ -2,7 +2,6 @@ import { ChatSession, OllamaModel, Settings } from '../types';
 import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, ChevronLeft, ChevronRight, Edit2, Check, X, Download, FileJson } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 
 interface SidebarProps {
   sessions: ChatSession[];
@@ -67,14 +66,14 @@ export default function Sidebar({
       fileName += '.json';
     } else {
       content = `# ${session.title}\n\n`;
-      session.messages.forEach(msg => {
-        const role = msg.role === 'user' ? 'User' : 'Assistant';
-        content += `### ${role} (${new Date(msg.timestamp).toLocaleString()})\n\n${msg.content}\n\n`;
-        if (msg.images && msg.images.length > 0) {
-          content += `*Attached Images: ${msg.images.length} (not included in flat text export)*\n\n`;
-        }
-        content += `---\n\n`;
-      });
+        session.messages.forEach(msg => {
+          const role = msg.role === 'user' ? 'User' : 'Assistant';
+          content += `### ${role} (${new Date(msg.timestamp).toLocaleString()})\n\n${msg.content}\n\n`;
+          if (msg.attachments && msg.attachments.length > 0) {
+            content += `*Attached Files: ${msg.attachments.length} (not included in flat text export)*\n\n`;
+          }
+          content += `---\n\n`;
+        });
       mimeType = 'text/markdown';
       fileName += '.md';
     }
@@ -91,27 +90,18 @@ export default function Sidebar({
   return (
     <>
       {/* Mobile Backdrop */}
-      <AnimatePresence>
-        {isMobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onToggleMobile}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
-          />
-        )}
-      </AnimatePresence>
+      {isMobileOpen && (
+        <div
+          onClick={onToggleMobile}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+        />
+      )}
 
-      <motion.aside
-        initial={false}
-        animate={{ 
-          width: isCollapsed ? 72 : 280,
-          x: isMobileOpen ? 0 : (window.innerWidth < 768 ? -280 : 0)
-        }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      <aside
         className={cn(
-          "bg-[var(--surface)] backdrop-blur-3xl border-r border-[var(--surface-border)] flex flex-col h-screen fixed md:relative transition-all z-50 md:z-20 shadow-xl",
+          "bg-[var(--surface)] backdrop-blur-3xl border-r border-[var(--surface-border)] flex flex-col h-screen fixed md:relative transition-all duration-300 z-50 md:z-20 shadow-xl",
+          isCollapsed ? "w-[72px]" : "w-[280px]",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           !isMobileOpen && "pointer-events-none md:pointer-events-auto"
         )}
       >
@@ -305,7 +295,7 @@ export default function Sidebar({
           {!isCollapsed && <span>Engine Settings</span>}
         </button>
       </div>
-    </motion.aside>
+    </aside>
     </>
   );
 }

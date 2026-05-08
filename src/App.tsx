@@ -3,10 +3,9 @@ import Sidebar from './components/Sidebar';
 import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
 import SettingsModal from './components/SettingsModal';
-import { ChatSession, Message, Settings, OllamaModel } from './types';
-import { DEFAULT_SETTINGS, listModels, chatStream, AttachedFileData } from './lib/ollama';
+import { ChatSession, Message, Settings, OllamaModel, FileAttachment } from './types';
+import { DEFAULT_SETTINGS, listModels, chatStream } from './lib/ollama';
 import { v4 as uuidv4 } from 'uuid';
-import { AnimatePresence } from 'motion/react';
 import { Menu, AlertTriangle } from 'lucide-react';
 
 export default function App() {
@@ -164,11 +163,7 @@ export default function App() {
     setSessions(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s));
   };
 
-  /**
-   * Handle sending a message with optional attached files
-   * Files are sent separately to the API, not stored in the message history
-   */
-  const handleSendMessage = async (content: string, files?: Array<{ name: string; content: string }>) => {
+  const handleSendMessage = async (content: string, attachments?: FileAttachment[]) => {
     if (!selectedModel) {
       alert('Please select a model first');
       return;
@@ -192,12 +187,11 @@ export default function App() {
       session = newSession;
     }
 
-    // Create user message (clean, without file content)
     const userMessage: Message = {
       role: 'user',
       content,
+      attachments,
       timestamp: Date.now(),
-      _hasAttachments: files && files.length > 0, // Flag to indicate files were attached
     };
 
     const initialAssistantMessage: Message = {
@@ -221,14 +215,11 @@ export default function App() {
     
     try {
       let accumulatedContent = '';
-      
-      // Send files separately to the API (not stored in messages)
       await chatStream(
         settings.baseUrl,
         selectedModel,
         [...session.messages, userMessage],
         settings,
-        files, // Files passed separately with secure boundaries
         (chunk) => {
           accumulatedContent += chunk;
           setSessions(prev => prev.map(s => 
@@ -271,7 +262,7 @@ export default function App() {
       <div className="mesh-gradient absolute inset-0 z-0" />
       
       <div className="flex w-full h-full relative z-10 md:p-4 lg:p-6 md:gap-4 lg:gap-6">
-        <div className="flex w-full h-full bg-[var(--surface)] backdrop-blur-3xl md:border md:border-[var(--surface-border)] md:rounded-[32px] overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/50">
+        <div className="flex w-full h-full bg-[var(--surface)] backdrop-blur-3xl md:border md:border-[var(--surface-border)] md:rounded-[32px] overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/50 transition-colors">
           <Sidebar
             sessions={sessions}
             currentSessionId={currentSessionId}
@@ -341,15 +332,13 @@ export default function App() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <SettingsModal
-            settings={settings}
-            onSave={setSettings}
-            onClose={() => setIsSettingsOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {isSettingsOpen && (
+        <SettingsModal
+          settings={settings}
+          onSave={setSettings}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      )}
     </div>
   );
 }
