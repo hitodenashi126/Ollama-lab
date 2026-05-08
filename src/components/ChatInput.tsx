@@ -1,12 +1,16 @@
 import React from 'react';
-import { Send, Hash, Paperclip, X, FileText } from 'lucide-react';
+import { Send, Hash, Paperclip, X, FileText, ChevronDown, Plus, Square } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { FileAttachment } from '../types';
+import { FileAttachment, OllamaModel } from '../types';
 
 interface ChatInputProps {
   onSend: (message: string, attachments?: FileAttachment[]) => void;
   disabled?: boolean;
   selectedModel?: string;
+  models: OllamaModel[];
+  onSelectModel: (model: string) => void;
+  onStop?: () => void;
+  isTyping?: boolean;
 }
 
 interface AttachedFile {
@@ -23,11 +27,32 @@ const ALLOWED_TEXT_TYPES = [
   '.sh', '.yaml', '.yml', '.sql'
 ];
 
-export default function ChatInput({ onSend, disabled, selectedModel }: ChatInputProps) {
+export default function ChatInput({ 
+  onSend, 
+  disabled, 
+  selectedModel, 
+  models, 
+  onSelectModel,
+  onStop,
+  isTyping 
+}: ChatInputProps) {
   const [input, setInput] = React.useState('');
   const [attachedFiles, setAttachedFiles] = React.useState<AttachedFile[]>([]);
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = React.useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsModelDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -97,20 +122,13 @@ export default function ChatInput({ onSend, disabled, selectedModel }: ChatInput
 
   return (
     <div className="max-w-3xl mx-auto w-full px-4 pb-safe md:pb-8 pt-2 relative z-20">
-      <div className="mb-4 sm:mb-0 relative flex flex-col gap-2 p-2 bg-[var(--surface)] backdrop-blur-xl rounded-2xl border border-[var(--surface-border)] shadow-2xl shadow-black/40 ring-1 ring-white/5 transition-colors">
-        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--surface-border)] hidden md:flex">
-          <Hash className="w-3.5 h-3.5 text-blue-500" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter text-neutral-500 dark:text-neutral-400">
-            {selectedModel || 'Select a model to begin'}
-          </span>
-        </div>
-
+      <div className="mb-4 sm:mb-0 relative flex flex-col bg-[var(--surface)] backdrop-blur-xl rounded-2xl border border-[var(--surface-border)] shadow-2xl shadow-black/40 ring-1 ring-white/5 transition-colors overflow-hidden">
         {attachedFiles.length > 0 && (
-          <div className="flex flex-wrap gap-2 px-3 py-2 border-b border-[var(--surface-border)]">
+          <div className="flex flex-wrap gap-2 px-3 py-2 border-b border-[var(--surface-border)] bg-black/[0.02] dark:bg-white/[0.02]">
             {attachedFiles.map((file, i) => (
               <div 
                 key={i} 
-                className="flex items-center gap-2 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-lg px-2 py-1 text-[10px] font-medium"
+                className="flex items-center gap-2 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-lg px-2 py-1 text-[10px] font-medium animate-fade-in"
               >
                 <FileText className="w-3 h-3 text-neutral-400" />
                 <span className="max-w-[100px] truncate">{file.name}</span>
@@ -125,55 +143,114 @@ export default function ChatInput({ onSend, disabled, selectedModel }: ChatInput
           </div>
         )}
         
-        <div className="flex items-end gap-2 pr-2">
-          <input 
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            multiple
-            className="hidden"
-            accept={ALLOWED_TEXT_TYPES.join(',')}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={disabled}
-            className="p-2.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-all mb-1.5 shrink-0"
-            title="Attach files"
-          >
-            <Paperclip className="w-4 h-4" />
-          </button>
-          
+        <div className="flex flex-col">
           <textarea
             ref={textareaRef}
             rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask Ollama anything..."
-            className="flex-1 w-full bg-transparent px-3 py-2.5 text-sm text-[var(--text-main)] focus:outline-none resize-none placeholder:text-neutral-500 min-h-[44px] max-h-[200px] transition-colors"
+            placeholder={isTyping ? "Copilot is responding..." : "Ask Ollama anything..."}
+            className="w-full bg-transparent px-4 py-3 text-sm text-[var(--text-main)] focus:outline-none resize-none placeholder:text-neutral-500 min-h-[60px] max-h-[200px] transition-colors"
             disabled={disabled}
           />
-          <button
-            onClick={() => handleSubmit()}
-            disabled={(!input.trim() && attachedFiles.length === 0) || disabled}
-            className={cn(
-              "p-2.5 rounded-xl transition-all flex items-center justify-center shrink-0 mb-1.5",
-              (input.trim() || attachedFiles.length > 0) && !disabled 
-                ? "bg-[var(--accent-bg)] text-[var(--accent-text)] hover:opacity-80 translate-y-[-1px] shadow-lg shadow-black/10 active:translate-y-0" 
-                : "bg-black/5 dark:bg-white/5 text-neutral-400 dark:text-neutral-600 cursor-not-allowed border border-black/5 dark:border-white/5"
-            )}
-          >
-            <Send className="w-4 h-4 stroke-[2.5]" />
-          </button>
+
+          <div className="flex items-center justify-between px-2 pb-2">
+            <div className="flex items-center gap-1">
+              <button
+                className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                title="Search"
+              >
+                <Hash className="w-4 h-4" />
+              </button>
+              <button
+                className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                title="Knowledge Base"
+              >
+                <FileText className="w-4 h-4" />
+              </button>
+              
+              <div className="w-px h-4 bg-[var(--surface-border)] mx-1" />
+
+              <input 
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                multiple
+                className="hidden"
+                accept={ALLOWED_TEXT_TYPES.join(',')}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={disabled}
+                className="p-1.5 text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                title="Attach files"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                  className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all"
+                >
+                  <span>{selectedModel || 'Select Model'}</span>
+                  <ChevronDown className={cn("w-3 h-3 transition-transform", isModelDropdownOpen && "rotate-180")} />
+                </button>
+
+                {isModelDropdownOpen && (
+                  <div className="absolute bottom-full left-0 mb-2 w-48 bg-[var(--surface)] border border-[var(--surface-border)] rounded-xl shadow-xl py-1 z-50 animate-scale-in">
+                    {models.length > 0 ? (
+                      models.map((model) => (
+                        <button
+                          key={model.name}
+                          onClick={() => {
+                            onSelectModel(model.name);
+                            setIsModelDropdownOpen(false);
+                          }}
+                          className={cn(
+                            "w-full text-left px-3 py-2 text-[11px] transition-colors hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-between",
+                            selectedModel === model.name ? "text-blue-500 bg-blue-500/5" : "text-neutral-500"
+                          )}
+                        >
+                          <span className="truncate">{model.name}</span>
+                          {selectedModel === model.name && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-[11px] text-neutral-500 italic">No models found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {isTyping ? (
+                <button
+                  onClick={onStop}
+                  className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-all"
+                  title="Stop generating"
+                >
+                  <Square className="w-4 h-4 fill-current" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSubmit()}
+                  disabled={(!input.trim() && attachedFiles.length === 0) || disabled}
+                  className={cn(
+                    "p-1.5 rounded-lg transition-all flex items-center justify-center shrink-0",
+                    (input.trim() || attachedFiles.length > 0) && !disabled 
+                      ? "bg-[var(--accent-bg)] text-[var(--accent-text)] hover:opacity-80 translate-y-[-1px] shadow-lg shadow-black/10 active:translate-y-0" 
+                      : "bg-black/5 dark:bg-white/5 text-neutral-400 dark:text-neutral-600 cursor-not-allowed border border-black/5 dark:border-white/5"
+                  )}
+                >
+                  <Send className="w-4 h-4 stroke-[2.5]" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="flex justify-center gap-4 mt-3">
-        <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-widest opacity-60">
-          Shift + Enter for new line
-        </p>
-        <p className="text-[10px] text-neutral-500 font-medium uppercase tracking-widest opacity-60">
-          Local Engine Required
-        </p>
       </div>
     </div>
   );

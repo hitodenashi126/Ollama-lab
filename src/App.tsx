@@ -36,8 +36,16 @@ export default function App() {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [viewportHeight, setViewportHeight] = React.useState('100dvh');
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   const currentSession = sessions.find(s => s.id === currentSessionId);
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  };
 
   // Handle visual viewport for mobile keyboard
   React.useEffect(() => {
@@ -93,19 +101,19 @@ export default function App() {
   }, [selectedModel]);
 
   // Fetch models
+  const isLoadingRef = React.useRef(false);
   const fetchModels = React.useCallback(async () => {
-    if (isLoadingModels) return;
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
     setIsLoadingModels(true);
     try {
       const fetchedModels = await listModels(settings.baseUrl);
       if (fetchedModels.length > 0) {
         setModels(fetchedModels);
         setIsConnected(true);
-        if (!selectedModel) {
-          setSelectedModel(fetchedModels[0].name);
-        }
+        setSelectedModel(prev => prev || fetchedModels[0].name);
       } else {
-        // Robust connection check
+        // Robust connection check - just a ping
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2000);
         try {
@@ -119,22 +127,24 @@ export default function App() {
       }
     } catch (error) {
       setIsConnected(false);
+      console.error('Failed to fetch models:', error);
     } finally {
+      isLoadingRef.current = false;
       setIsLoadingModels(false);
     }
-  }, [settings.baseUrl, selectedModel, isLoadingModels]);
+  }, [settings.baseUrl]);
 
   React.useEffect(() => {
     fetchModels();
   }, [fetchModels]);
 
-  // Polling for connection if disconnected
+  // Polling for connection if disconnected - more conservative interval
   React.useEffect(() => {
     if (isConnected) return;
 
     const interval = setInterval(() => {
       fetchModels();
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [isConnected, fetchModels]);
@@ -168,6 +178,8 @@ export default function App() {
       alert('Please select a model first');
       return;
     }
+
+    if (isStreaming) return;
 
     let sessionId = currentSessionId;
     let session = currentSession;
@@ -212,6 +224,8 @@ export default function App() {
     ));
 
     setIsStreaming(true);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     
     try {
       let accumulatedContent = '';
@@ -232,24 +246,32 @@ export default function App() {
                 }
               : s
           ));
-        }
+        },
+        controller.signal
       );
     } catch (error) {
-      console.error('Chat error:', error);
-      setSessions(prev => prev.map(s => 
-        s.id === sessionId 
-          ? {
-              ...s,
-              messages: [...s.messages.slice(0, -1), { 
-                role: 'assistant', 
-                content: `Error: ${error instanceof Error ? error.message : 'Failed to connect to Ollama. Make sure it is running and accessible.'}`, 
-                timestamp: Date.now() 
-              }]
-            }
-          : s
-      ));
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Generation stopped by user');
+      } else {
+        const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+        console.error('Chat error:', error);
+        
+        setSessions(prev => prev.map(s => 
+          s.id === sessionId 
+            ? {
+                ...s,
+                messages: [...s.messages.slice(0, -1), { 
+                  role: 'assistant', 
+                  content: `⚠️ **Ollama Error**\n\n${errorMessage}\n\n*Check if Ollama is running and the model is loaded.*`, 
+                  timestamp: Date.now() 
+                }]
+              }
+            : s
+        ));
+      }
     } finally {
       setIsStreaming(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -276,11 +298,7 @@ export default function App() {
             }}
             onDeleteSession={handleDeleteSession}
             onRenameSession={handleRenameSession}
-            models={models}
-            selectedModel={selectedModel}
-            onSelectModel={setSelectedModel}
             onOpenSettings={() => setIsSettingsOpen(true)}
-            isLoadingModels={isLoadingModels}
             isMobileOpen={isMobileMenuOpen}
             onToggleMobile={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           />
@@ -325,6 +343,10 @@ export default function App() {
                   onSend={handleSendMessage} 
                   disabled={isStreaming} 
                   selectedModel={selectedModel}
+                  models={models}
+                  onSelectModel={setSelectedModel}
+                  isTyping={isStreaming}
+                  onStop={handleStop}
                 />
               </div>
             </div>

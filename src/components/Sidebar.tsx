@@ -10,11 +10,7 @@ interface SidebarProps {
   onNewSession: () => void;
   onDeleteSession: (id: string) => void;
   onRenameSession: (id: string, newTitle: string) => void;
-  models: OllamaModel[];
-  selectedModel: string;
-  onSelectModel: (name: string) => void;
   onOpenSettings: () => void;
-  isLoadingModels: boolean;
   isMobileOpen: boolean;
   onToggleMobile: () => void;
 }
@@ -26,11 +22,7 @@ export default function Sidebar({
   onNewSession,
   onDeleteSession,
   onRenameSession,
-  models,
-  selectedModel,
-  onSelectModel,
   onOpenSettings,
-  isLoadingModels,
   isMobileOpen,
   onToggleMobile
 }: SidebarProps) {
@@ -225,60 +217,6 @@ export default function Sidebar({
                 )}
               </div>
             ))}
-          </div>
-        </section>
-
-        <section>
-          {!isCollapsed && (
-            <div className="flex items-center justify-between px-3 mb-3">
-              <h2 className="text-[10px] uppercase font-bold text-neutral-500 dark:text-neutral-500 tracking-widest">Available Models</h2>
-              <div className="flex bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-full px-1.5 py-0.5 items-center gap-1">
-                 <div className={cn("w-1 h-1 rounded-full", models.length > 0 ? "bg-green-500" : "bg-red-500")} />
-                 <span className="text-[9px] font-bold text-neutral-500 dark:text-neutral-500 uppercase">{models.length}</span>
-              </div>
-            </div>
-          )}
-          <div className="space-y-1">
-            {isLoadingModels ? (
-              <div className="space-y-1">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-3 px-3 py-2.5">
-                    <div className="w-4 h-4 rounded-md skeleton shrink-0" />
-                    {!isCollapsed && (
-                      <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                        <div className="h-3.5 w-3/4 skeleton rounded-md" />
-                        <div className="h-2.5 w-1/4 skeleton rounded-md" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : models.length === 0 ? (
-              <div className="px-3 py-4 text-xs text-neutral-600 italic">No models found</div>
-            ) : (
-              models.map((model) => (
-                <button
-                  key={model.name}
-                  onClick={() => onSelectModel(model.name)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left group",
-                    selectedModel === model.name
-                      ? "bg-black/10 dark:bg-white/10 text-[var(--text-main)] border border-black/5 dark:border-white/10"
-                      : "text-neutral-500 dark:text-neutral-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--text-main)]"
-                  )}
-                >
-                  <Database className={cn("w-4 h-4 shrink-0 transition-colors", selectedModel === model.name ? "text-[var(--accent)]" : "text-neutral-400 dark:text-neutral-600")} />
-                  {!isCollapsed && (
-                    <div className="flex flex-col min-w-0">
-                      <span className="truncate font-medium transition-colors">{model.name}</span>
-                      <span className="text-[10px] opacity-60 dark:opacity-50 flex items-center gap-1 transition-colors">
-                         {formatSize(model.size)}
-                      </span>
-                    </div>
-                  )}
-                </button>
-              ))
-            )}
           </div>
         </section>
       </div>

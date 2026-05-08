@@ -9,15 +9,31 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'glass-dark',
 };
 
+export class OllamaError extends Error {
+  constructor(message: string, public status?: number) {
+    super(message);
+    this.name = 'OllamaError';
+  }
+}
+
 export async function listModels(baseUrl: string): Promise<OllamaModel[]> {
   try {
-    const response = await fetch(`${baseUrl}/api/tags`);
-    if (!response.ok) throw new Error('Failed to fetch models');
+    const response = await fetch(`${baseUrl}/api/tags`).catch(err => {
+      throw new OllamaError(`Cannot reach Ollama at ${baseUrl}. Ensure Ollama is running and accessible.`);
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new OllamaError('Ollama API endpoint not found. Please check your Base URL.');
+      }
+      throw new OllamaError(`Ollama returned an error (${response.status}): ${response.statusText}`);
+    }
+
     const data = await response.json();
     return data.models || [];
   } catch (error) {
-    console.error('Error fetching models:', error);
-    return [];
+    if (error instanceof OllamaError) throw error;
+    throw new OllamaError('Failed to fetch models. Check your network connection.');
   }
 }
 
@@ -26,7 +42,8 @@ export async function chatStream(
   model: string,
   messages: Message[],
   settings: Settings,
-  onChunk: (chunk: string) => void
+  onChunk: (chunk: string) => void,
+  signal?: AbortSignal
 ): Promise<void> {
   const mappedMessages = messages.map(({ role, content, attachments }) => {
     let finalContent = content;
@@ -54,11 +71,28 @@ export async function chatStream(
       },
       stream: true,
     }),
+    signal,
+  }).catch(err => {
+    if (err.name === 'AbortError') throw err;
+    throw new OllamaError(`Connection failed. Make sure Ollama is running at ${baseUrl}`);
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || 'Failed to connect to Ollama');
+    const errorText = await response.text();
+    let errorMessage = `Ollama error (${response.status})`;
+    
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorMessage = errorJson.error || errorMessage;
+    } catch {
+      errorMessage = errorText || errorMessage;
+    }
+
+    if (response.status === 404) {
+      throw new OllamaError(`Model "${model}" not found. You might need to pull it first.`);
+    }
+
+    throw new OllamaError(errorMessage, response.status);
   }
 
   const reader = response.body?.getReader();
