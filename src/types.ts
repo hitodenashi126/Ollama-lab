@@ -25,6 +25,9 @@ export interface Settings {
   topP: number;
   numCtx: number;
   theme: 'glass-dark' | 'glass-light' | 'solid-dark' | 'solid-light';
+  chatStyle: 'boxed' | 'unboxed';
+  accentColor: string;
+  showTimestamp: boolean;
 }
 
 export interface OllamaModel {

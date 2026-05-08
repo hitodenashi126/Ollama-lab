@@ -33,6 +33,7 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
   const [isLoadingModels, setIsLoadingModels] = React.useState(false);
   const [isStreaming, setIsStreaming] = React.useState(false);
+  const [pullProgress, setPullProgress] = React.useState<{ status: string; percentage?: number } | null>(null);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [viewportHeight, setViewportHeight] = React.useState('100dvh');
@@ -67,11 +68,15 @@ export default function App() {
     };
   }, []);
 
-  // Theme effect
+  // Theme and Accent Color effect
   React.useEffect(() => {
     const themeClasses = ['glass-dark', 'glass-light', 'solid-dark', 'solid-light'];
     document.documentElement.classList.remove(...themeClasses, 'dark', 'light');
     document.documentElement.classList.add(settings.theme);
+    
+    // Set accent color
+    document.documentElement.style.setProperty('--accent', settings.accentColor);
+    document.documentElement.style.setProperty('--accent-bg', settings.accentColor);
     
     // Add compatibility classes for tailwind utilities
     if (settings.theme.includes('dark')) {
@@ -79,7 +84,7 @@ export default function App() {
     } else {
       document.documentElement.classList.add('light');
     }
-  }, [settings.theme]);
+  }, [settings.theme, settings.accentColor]);
 
   // Persistence
   React.useEffect(() => {
@@ -275,6 +280,35 @@ export default function App() {
     }
   };
 
+  const handlePullModel = async (name: string) => {
+    try {
+      setPullProgress({ status: 'Starting...' });
+      await import('./lib/ollama').then(m => m.pullModel(settings.baseUrl, name, (status, percentage) => {
+        setPullProgress({ status, percentage });
+      }));
+      fetchModels();
+    } catch (error) {
+      console.error('Failed to pull model:', error);
+      alert('Failed to pull model: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setPullProgress(null);
+    }
+  };
+
+  const handleDeleteModel = async (name: string) => {
+    if (!confirm(`Are you sure you want to delete model "${name}"?`)) return;
+    try {
+      await import('./lib/ollama').then(m => m.deleteModel(settings.baseUrl, name));
+      fetchModels();
+      if (selectedModel === name) {
+        setSelectedModel(models.find(m => m.name !== name)?.name || '');
+      }
+    } catch (error) {
+      console.error('Failed to delete model:', error);
+      alert('Failed to delete model');
+    }
+  };
+
   return (
     <div 
       style={{ height: viewportHeight }}
@@ -336,6 +370,8 @@ export default function App() {
                 messages={currentSession?.messages || []} 
                 isTyping={isStreaming}
                 viewportHeight={viewportHeight}
+                chatStyle={settings.chatStyle}
+                showTimestamp={settings.showTimestamp}
               />
               
               <div className="bg-gradient-to-t from-black/20 to-transparent pt-12">
@@ -359,6 +395,10 @@ export default function App() {
           settings={settings}
           onSave={setSettings}
           onClose={() => setIsSettingsOpen(false)}
+          models={models}
+          onPullModel={handlePullModel}
+          onDeleteModel={handleDeleteModel}
+          pullProgress={pullProgress}
         />
       )}
     </div>

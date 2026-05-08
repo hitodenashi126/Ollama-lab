@@ -7,6 +7,9 @@ export const DEFAULT_SETTINGS: Settings = {
   topP: 0.9,
   numCtx: 4096,
   theme: 'glass-dark',
+  chatStyle: 'boxed',
+  accentColor: '#3b82f6',
+  showTimestamp: true,
 };
 
 export class OllamaError extends Error {
@@ -119,4 +122,48 @@ export async function chatStream(
       }
     }
   }
+}
+
+export async function pullModel(baseUrl: string, name: string, onProgress?: (status: string, percentage?: number) => void): Promise<void> {
+  const response = await fetch(`${baseUrl}/api/pull`, {
+    method: 'POST',
+    body: JSON.stringify({ name, stream: true }),
+  });
+
+  if (!response.ok) throw new Error('Failed to pull model');
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('No reader available');
+
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    const lines = chunk.split('\n');
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        const json = JSON.parse(line);
+        if (onProgress) {
+          const percentage = json.total ? Math.round((json.completed / json.total) * 100) : undefined;
+          onProgress(json.status, percentage);
+        }
+        if (json.status === 'success') return;
+      } catch (e) {
+        console.warn('Failed to parse pull progress', e);
+      }
+    }
+  }
+}
+
+export async function deleteModel(baseUrl: string, name: string): Promise<void> {
+  const response = await fetch(`${baseUrl}/api/delete`, {
+    method: 'DELETE',
+    body: JSON.stringify({ name }),
+  });
+
+  if (!response.ok) throw new Error('Failed to delete model');
 }

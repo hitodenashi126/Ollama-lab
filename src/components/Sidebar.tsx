@@ -91,7 +91,7 @@ export default function Sidebar({
 
       <aside
         className={cn(
-          "bg-[var(--surface)] backdrop-blur-3xl border-r border-[var(--surface-border)] flex flex-col h-screen fixed md:relative transition-all duration-300 z-50 md:z-20 shadow-xl",
+          "bg-[var(--surface)] backdrop-blur-3xl border-r border-[var(--surface-border)] flex flex-col h-full absolute inset-y-0 left-0 md:relative md:inset-auto transition-all duration-300 z-50 md:z-20 shadow-xl",
           isCollapsed ? "w-[72px]" : "w-[280px]",
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           !isMobileOpen && "pointer-events-none md:pointer-events-auto"
@@ -221,7 +221,7 @@ export default function Sidebar({
         </section>
       </div>
 
-      <div className="p-4 border-t border-black/5 dark:border-white/10 transition-colors">
+      <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] border-t border-black/5 dark:border-white/10 transition-colors">
         <button
           onClick={onOpenSettings}
           className={cn(

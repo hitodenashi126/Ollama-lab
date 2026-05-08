@@ -210,11 +210,11 @@ export default function ChatInput({
                           }}
                           className={cn(
                             "w-full text-left px-3 py-2 text-[11px] transition-colors hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-between",
-                            selectedModel === model.name ? "text-blue-500 bg-blue-500/5" : "text-neutral-500"
+                            selectedModel === model.name ? "text-[var(--accent)] bg-[var(--accent)]/5" : "text-neutral-500"
                           )}
                         >
                           <span className="truncate">{model.name}</span>
-                          {selectedModel === model.name && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+                          {selectedModel === model.name && <div className="w-1.5 h-1.5 bg-[var(--accent)] rounded-full" />}
                         </button>
                       ))
                     ) : (

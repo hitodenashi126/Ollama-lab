@@ -1,6 +1,7 @@
 import React from 'react';
 import { Message } from '../types';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Bot, User, Copy, Check, Save } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -10,9 +11,11 @@ interface MessageListProps {
   messages: Message[];
   isTyping?: boolean;
   viewportHeight?: string;
+  chatStyle?: 'boxed' | 'unboxed';
+  showTimestamp?: boolean;
 }
 
-export default function MessageList({ messages, isTyping, viewportHeight }: MessageListProps) {
+export default function MessageList({ messages, isTyping, viewportHeight, chatStyle = 'boxed', showTimestamp }: MessageListProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -39,7 +42,12 @@ export default function MessageList({ messages, isTyping, viewportHeight }: Mess
       )}
       
       {messages.map((message, index) => (
-        <MessageItem key={index} message={message} />
+        <MessageItem 
+          key={index} 
+          message={message} 
+          chatStyle={chatStyle} 
+          showTimestamp={showTimestamp} 
+        />
       ))}
       
       {isTyping && (
@@ -60,7 +68,15 @@ export default function MessageList({ messages, isTyping, viewportHeight }: Mess
   );
 }
 
-function MessageItem({ message }: { message: Message }) {
+function MessageItem({ 
+  message, 
+  chatStyle, 
+  showTimestamp 
+}: { 
+  message: Message; 
+  chatStyle: 'boxed' | 'unboxed'; 
+  showTimestamp?: boolean; 
+}) {
   const isAssistant = message.role === 'assistant';
   const [copied, setCopied] = React.useState(false);
 
@@ -98,85 +114,153 @@ function MessageItem({ message }: { message: Message }) {
         {isAssistant ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
       </div>
       
-      <div className={cn(
-        "space-y-2",
-        isAssistant ? "w-[90%]" : "w-full flex flex-col items-end"
-      )}>
         <div className={cn(
-          "relative p-5 rounded-2xl transition-all w-full",
-          isAssistant 
-            ? "bg-[var(--surface)] border border-[var(--surface-border)] shadow-xl shadow-black/5" 
-            : "bg-blue-600/10 dark:bg-blue-600/20 border border-blue-500/30 text-[var(--text-main)] transition-colors text-right"
+          "space-y-2 w-full",
+          isAssistant ? "md:max-w-[90%]" : "flex flex-col items-end"
         )}>
-          <div className={cn("markdown-body", !isAssistant && "text-right")}>
-            <ReactMarkdown
-              components={{
-                code({ node, inline, className, children, ...props }: any) {
-                  const match = /language-(\w+)/.exec(className || '');
-                  return !inline && match ? (
-                    <div className="relative group/code my-4">
-                      <div className="absolute right-2 top-2 z-10 opacity-0 group-hover/code:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
-                          }}
-                          className="p-1 rounded bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-colors"
-                          title="Copy code"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <SyntaxHighlighter
-                        style={atomDark}
-                        language={match[1]}
-                        PreTag="div"
-                        className="rounded-xl !bg-neutral-900 !p-4 border border-white/5"
-                        {...props}
-                      >
-                        {String(children).replace(/\n$/, '')}
-                      </SyntaxHighlighter>
-                    </div>
-                  ) : (
-                    <code className={cn("bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded text-sm", className)} {...props}>
-                      {children}
-                    </code>
-                  );
-                }
-              }}
-            >
-              {message.content}
-            </ReactMarkdown>
-          </div>
-          
-          {isAssistant && message.content && (
-            <div className="absolute top-3 right-3 flex items-center gap-2">
-              <button
-                onClick={saveToFile}
-                className="p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5"
-                title="Save as markdown file"
-              >
-                <Save className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={copyToClipboard}
-                className="p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5"
-                title="Copy message"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
+          {chatStyle === 'boxed' ? (
+            <div className={cn(
+              "relative p-5 rounded-2xl transition-all w-full",
+              isAssistant 
+                ? "bg-[var(--surface)] border border-[var(--surface-border)] shadow-xl shadow-black/5" 
+                : "bg-blue-600 border border-blue-500 text-white shadow-lg shadow-blue-600/20 text-right"
+            )}>
+              <div className={cn("markdown-body", !isAssistant && "text-right text-white")}>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code({ node, inline, className, children, ...props }: any) {
+                      const match = /language-(\w+)/.exec(className || '');
+                      return !inline && match ? (
+                        <div className="relative group/code my-4">
+                          <div className="absolute right-2 top-2 z-10 opacity-0 group-hover/code:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
+                              }}
+                              className="p-1 rounded bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-colors"
+                              title="Copy code"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <SyntaxHighlighter
+                            style={atomDark}
+                            language={match[1]}
+                            PreTag="div"
+                            className="rounded-xl !bg-neutral-900 !p-4 border border-white/5"
+                            {...props}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        </div>
+                      ) : (
+                        <code className={cn("bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded text-sm", className)} {...props}>
+                          {children}
+                        </code>
+                      );
+                    }
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </div>
+              
+              {isAssistant && message.content && (
+                <div className="absolute top-3 right-3 flex items-center gap-2">
+                  <button
+                    onClick={saveToFile}
+                    className="p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5"
+                    title="Save as markdown file"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={copyToClipboard}
+                    className="p-1.5 rounded-lg transition-all bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] border border-black/5 dark:border-white/5"
+                    title="Copy message"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className={cn("w-full py-2", !isAssistant && "text-right")}>
+               <div className="markdown-body">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    code({ node, inline, className, children, ...props }: any) {
+                      const match = /language-(\w+)/.exec(className || '');
+                      return !inline && match ? (
+                        <div className="relative group/code my-4">
+                          <div className="absolute right-2 top-2 z-10 opacity-0 group-hover/code:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
+                              }}
+                              className="p-1 rounded bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-colors"
+                              title="Copy code"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <SyntaxHighlighter
+                            style={atomDark}
+                            language={match[1]}
+                            PreTag="div"
+                            className="rounded-xl !bg-neutral-900 !p-4 border border-white/5"
+                            {...props}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        </div>
+                      ) : (
+                        <code className={cn("bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded text-sm", className)} {...props}>
+                          {children}
+                        </code>
+                      );
+                    }
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </div>
+              
+              {isAssistant && message.content && (
+                <div className="flex items-center gap-3 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <button
+                    onClick={copyToClipboard}
+                    className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-blue-500 transition-colors"
+                  >
+                    {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                    Copy
+                  </button>
+                  <button
+                    onClick={saveToFile}
+                    className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-blue-500 transition-colors"
+                  >
+                    <Save className="w-3 h-3" />
+                    Save
+                  </button>
+                </div>
+              )}
             </div>
           )}
+          
+          <div className={cn(
+            "flex items-center gap-2 px-1",
+            !isAssistant && "justify-end"
+          )}>
+            {showTimestamp && (
+              <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">
+                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+            {!isAssistant && <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500">Sent</span>}
+          </div>
         </div>
-        <div className={cn(
-          "flex items-center gap-2 px-1",
-          !isAssistant && "justify-end"
-        )}>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">
-            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          {!isAssistant && <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500">Sent</span>}
-        </div>
-      </div>
     </div>
   );
 }
