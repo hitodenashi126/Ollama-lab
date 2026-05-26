@@ -401,6 +401,10 @@ export default function App() {
                 viewportHeight={viewportHeight}
                 chatStyle={settings.chatStyle}
                 showTimestamp={settings.showTimestamp}
+                isConnected={isConnected}
+                onRetryConnection={fetchModels}
+                baseUrl={settings.baseUrl}
+                onOpenSettings={() => setIsSettingsOpen(true)}
               />
               
               <div className="bg-gradient-to-t from-black/20 to-transparent pt-12">

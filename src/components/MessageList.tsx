@@ -3,6 +3,7 @@ import { Message } from '../types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { LabIcon } from './LabIcon';
+import { OllamaTroubleshooter } from './OllamaTroubleshooter';
 import { User, Copy, Check, Save } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Tooltip } from './Tooltip';
@@ -16,9 +17,23 @@ interface MessageListProps {
   viewportHeight?: string;
   chatStyle?: 'boxed' | 'unboxed';
   showTimestamp?: boolean;
+  isConnected?: boolean;
+  onRetryConnection?: () => Promise<void>;
+  baseUrl?: string;
+  onOpenSettings?: () => void;
 }
 
-export default function MessageList({ messages, isTyping, viewportHeight, chatStyle = 'boxed', showTimestamp }: MessageListProps) {
+export default function MessageList({
+  messages,
+  isTyping,
+  viewportHeight,
+  chatStyle = 'boxed',
+  showTimestamp,
+  isConnected = true,
+  onRetryConnection,
+  baseUrl = 'http://localhost:11434',
+  onOpenSettings
+}: MessageListProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -33,14 +48,25 @@ export default function MessageList({ messages, isTyping, viewportHeight, chatSt
       className="flex-1 overflow-y-auto px-4 py-8 space-y-8 scroll-smooth z-10"
     >
       {messages.length === 0 && !isTyping && (
-        <div className="h-full flex flex-col items-center justify-center text-neutral-500 space-y-6">
-          <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl shadow-black/20">
+        <div className="h-full flex flex-col items-center justify-center text-neutral-500 space-y-6 overflow-y-auto py-10">
+          <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl shadow-black/20 shrink-0">
             <LabIcon size={40} className="text-[var(--accent)]" />
           </div>
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-2 shrink-0">
             <p className="text-lg font-bold text-[var(--text-main)] italic tracking-tight">OLLAMA<span className="text-[var(--accent)]">LAB</span></p>
-            <p className="text-sm font-medium text-neutral-500 max-w-xs">Start a high-performance session with your local AI instance</p>
+            {isConnected && (
+              <p className="text-sm font-medium text-neutral-500 max-w-xs">Start a high-performance session with your local AI instance</p>
+            )}
           </div>
+          {!isConnected && onRetryConnection && onOpenSettings && (
+            <div className="w-full px-2">
+              <OllamaTroubleshooter
+                onRetry={onRetryConnection}
+                baseUrl={baseUrl}
+                onOpenSettings={onOpenSettings}
+              />
+            </div>
+          )}
         </div>
       )}
       
