@@ -337,13 +337,52 @@ export default function App() {
     }
   };
 
+  // Helper to get dynamic mesh background style based on accent color and theme
+  const getMeshGradientStyle = () => {
+    const hashAccent = settings.accentColor;
+    
+    // Convert hex to rgb for opacity variation
+    const toRgb = (hex: string) => {
+      const cleanHex = hex.replace('#', '');
+      const r = parseInt(cleanHex.substring(0, 2), 16) || 0;
+      const g = parseInt(cleanHex.substring(2, 4), 16) || 0;
+      const b = parseInt(cleanHex.substring(4, 6), 16) || 0;
+      return `${r}, ${g}, ${b}`;
+    };
+
+    try {
+      const rgb = toRgb(hashAccent);
+      
+      if (settings.theme === 'glass-light') {
+        return {
+          background: `
+            radial-gradient(circle at 20% 30%, rgba(${rgb}, 0.12) 0%, transparent 50%), 
+            radial-gradient(circle at 80% 70%, rgba(${rgb}, 0.04) 0%, transparent 50%), 
+            radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, #f8fafc 100%)
+          `
+        };
+      } else if (settings.theme === 'glass-dark') {
+        return {
+          background: `
+            radial-gradient(circle at 20% 30%, rgba(${rgb}, 0.15) 0%, transparent 50%), 
+            radial-gradient(circle at 80% 70%, rgba(${rgb}, 0.05) 0%, transparent 50%), 
+            radial-gradient(circle at 50% 50%, #05070a 0%, #030406 100%)
+          `
+        };
+      }
+    } catch (e) {
+      console.error('Error generating dynamic background:', e);
+    }
+    return {};
+  };
+
   return (
     <div 
       style={{ height: viewportHeight }}
       className="flex w-full relative overflow-hidden text-[var(--text-main)] selection:bg-blue-500 selection:text-white"
     >
       {/* Mesh Gradient Background */}
-      <div className="mesh-gradient absolute inset-0 z-0" />
+      <div className="mesh-gradient absolute inset-0 z-0" style={getMeshGradientStyle()} />
       
       <div className="flex w-full h-full relative z-10 md:p-4 lg:p-6 md:gap-4 lg:gap-6">
         <div className="flex w-full h-full bg-[var(--surface)] backdrop-blur-3xl md:border md:border-[var(--surface-border)] md:rounded-2xl overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/50 transition-colors">
