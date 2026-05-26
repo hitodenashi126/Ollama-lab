@@ -1,4 +1,4 @@
-package com.ollamalab.app;
+package com.nexus.ai;
 
 import com.getcapacitor.BridgeActivity;
 

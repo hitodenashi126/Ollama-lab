@@ -4,6 +4,10 @@ import { cn, formatSize } from '../lib/utils';
 import React from 'react';
 import { Tooltip } from './Tooltip';
 import { LabIcon } from './LabIcon';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { toast } from 'sonner';
 
 interface SidebarProps {
   sessions: ChatSession[];
@@ -59,7 +63,7 @@ export default function Sidebar({
     setEditingTitle('');
   };
 
-  const exportSession = (session: ChatSession, format: 'json' | 'md') => {
+  const exportSession = async (session: ChatSession, format: 'json' | 'md') => {
     let content = '';
     let mimeType = '';
     let fileName = `${session.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_export`;
@@ -82,13 +86,37 @@ export default function Sidebar({
       fileName += '.md';
     }
 
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: content,
+          directory: Directory.Cache,
+          encoding: 'utf8' as any
+        });
+
+        await Share.share({
+          title: `Export Chat Session`,
+          text: `Here is the exported session "${session.title}" from Ollama Lab`,
+          url: result.uri,
+          dialogTitle: `Export Chat`
+        });
+
+        toast.success('Session exported successfully');
+      } catch (err: any) {
+        console.error('Error writing/sharing native session export:', err);
+        toast.error(`Export failed: ${err.message || err}`);
+      }
+    } else {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Session saved to file');
+    }
   };
 
   return (

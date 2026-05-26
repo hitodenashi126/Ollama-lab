@@ -10,6 +10,9 @@ import { Tooltip } from './Tooltip';
 import { toast } from 'sonner';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 interface MessageListProps {
   messages: Message[];
@@ -115,14 +118,39 @@ function MessageItem({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const saveToFile = () => {
-    const blob = new Blob([message.content], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `response_${new Date().getTime()}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const saveToFile = async () => {
+    const fileName = `response_${new Date().getTime()}.md`;
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: message.content,
+          directory: Directory.Cache,
+          encoding: 'utf8' as any
+        });
+
+        await Share.share({
+          title: 'Export Markdown Response',
+          text: 'Here is the exported response from Ollama Lab',
+          url: result.uri,
+          dialogTitle: 'Export Response'
+        });
+
+        toast.success('Response exported successfully');
+      } catch (err: any) {
+        console.error('Error writing/sharing native file export:', err);
+        toast.error(`Export failed: ${err.message || err}`);
+      }
+    } else {
+      const blob = new Blob([message.content], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Response saved as markdown');
+    }
   };
 
   return (
