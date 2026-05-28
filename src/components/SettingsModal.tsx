@@ -53,7 +53,7 @@ export default function SettingsModal({
     {
       id: 'general' as Category,
       title: 'Workspace & Persona',
-      description: 'Configure interface themes, connectivity endpoints, and system instrucciones.',
+      description: 'Configure interface themes, custom accent colors, connectivity endpoints, and system instructions.',
       icon: Monitor,
     },
     {
@@ -65,7 +65,7 @@ export default function SettingsModal({
     {
       id: 'chat-ui' as Category,
       title: 'Chat Customizer',
-      description: 'Toggle boxed bubbles, customize body typography, and select eye-safe palette accents.',
+      description: 'Toggle boxed bubbles, customize body typography, and hide/show details.',
       icon: Palette,
     },
     {
@@ -198,6 +198,38 @@ export default function SettingsModal({
                         >
                           <t.icon className={cn("w-4.5 h-4.5 transition-colors", formData.theme === t.id ? "text-[var(--accent-text)]" : "text-neutral-400 group-hover:text-[var(--accent)]")} />
                           <span className="text-[9px] font-bold uppercase tracking-wider">{t.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 text-neutral-400">
+                      <Palette className="w-4 h-4 text-[var(--accent)]" />
+                      <h3 className="text-[10px] uppercase font-bold tracking-widest">Accent Color</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { name: 'Blue', color: '#3b82f6' },
+                        { name: 'Purple', color: '#a855f7' },
+                        { name: 'Green', color: '#10b981' },
+                        { name: 'Orange', color: '#f59e0b' },
+                        { name: 'Rose', color: '#f43f5e' },
+                        { name: 'Cyan', color: '#06b6d4' },
+                      ].map((p) => (
+                        <button
+                          key={p.color}
+                          onClick={() => setFormData({ ...formData, accentColor: p.color })}
+                          className={cn(
+                            "w-9 h-9 rounded-full border-4 transition-all flex items-center justify-center",
+                            formData.accentColor === p.color 
+                              ? "border-[var(--accent)]/40 scale-110 shadow-lg" 
+                              : "border-transparent hover:scale-105"
+                          )}
+                          style={{ backgroundColor: p.color }}
+                          title={p.name}
+                        >
+                          {formData.accentColor === p.color && <CheckCircle2 className="w-4.5 h-4.5 text-white" />}
                         </button>
                       ))}
                     </div>
@@ -370,38 +402,6 @@ export default function SettingsModal({
                           <p className={cn("text-[9px] font-medium leading-tight", formData.chatStyle === s.id ? "opacity-80" : "text-neutral-500")}>
                             {s.description}
                           </p>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="space-y-4">
-                    <div className="flex items-center gap-2 text-neutral-400">
-                      <Palette className="w-4 h-4 text-[var(--accent)]" />
-                      <h3 className="text-[10px] uppercase font-bold tracking-widest">Accent Color</h3>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      {[
-                        { name: 'Blue', color: '#3b82f6' },
-                        { name: 'Purple', color: '#a855f7' },
-                        { name: 'Green', color: '#10b981' },
-                        { name: 'Orange', color: '#f59e0b' },
-                        { name: 'Rose', color: '#f43f5e' },
-                        { name: 'Cyan', color: '#06b6d4' },
-                      ].map((p) => (
-                        <button
-                          key={p.color}
-                          onClick={() => setFormData({ ...formData, accentColor: p.color })}
-                          className={cn(
-                            "w-9 h-9 rounded-full border-4 transition-all flex items-center justify-center",
-                            formData.accentColor === p.color 
-                              ? "border-[var(--accent)]/40 scale-110 shadow-lg" 
-                              : "border-transparent hover:scale-105"
-                          )}
-                          style={{ backgroundColor: p.color }}
-                          title={p.name}
-                        >
-                          {formData.accentColor === p.color && <CheckCircle2 className="w-4.5 h-4.5 text-white" />}
                         </button>
                       ))}
                     </div>
