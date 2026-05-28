@@ -87,13 +87,13 @@ export default function SettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4">
       <div
         onClick={onClose}
         className="absolute inset-0 bg-black/75 backdrop-blur-md animate-fade-in"
       />
       <div
-        className="relative bg-[var(--surface)] backdrop-blur-3xl w-full max-w-2xl rounded-2xl border border-[var(--surface-border)] shadow-2xl overflow-hidden flex flex-col h-[min(640px,calc(100dvh-2rem))] shadow-black/80 transition-all duration-300 animate-scale-in"
+        className="relative bg-[var(--surface)] backdrop-blur-3xl w-full h-full sm:h-[min(640px,calc(100dvh-2rem))] sm:max-w-2xl sm:rounded-2xl rounded-none border-0 sm:border border-[var(--surface-border)] shadow-2xl overflow-hidden flex flex-col shadow-black/80 transition-all duration-300 animate-scale-in"
       >
         {/* Header Panel */}
         <div className="p-5 md:p-6 border-b border-[var(--surface-border)] flex items-center justify-between shrink-0 bg-black/10 dark:bg-white/[0.01]">
@@ -554,7 +554,7 @@ export default function SettingsModal({
         </div>
 
         {/* Unified Bottom Footer */}
-        <div className="p-4 md:p-5 bg-black/10 dark:bg-white/[0.01] border-t border-[var(--surface-border)] flex items-center justify-between shrink-0 gap-4">
+        <div className="p-4 md:p-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-5 bg-black/10 dark:bg-white/[0.01] border-t border-[var(--surface-border)] flex items-center justify-between shrink-0 gap-4">
           <div className="flex items-center gap-1.5 text-[var(--accent)] text-[8px] font-bold uppercase tracking-widest pl-1 leading-none">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Local & Private Sandbox</span>

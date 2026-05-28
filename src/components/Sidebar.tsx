@@ -182,7 +182,7 @@ export default function Sidebar({
           {!isCollapsed && <h2 className="px-3 text-[10px] uppercase font-bold text-neutral-500 dark:text-neutral-500 tracking-widest mb-3">Recent Chats</h2>}
           <div className="space-y-1">
             {sessions.map((session) => (
-              <div key={session.id} className="group relative">
+              <div key={session.id} className={cn("group relative", menuOpenId === session.id && "z-30")}>
                 {editingSessionId === session.id ? (
                   <div className="flex items-center gap-2 px-3 py-1.5 -my-1 rounded-lg bg-black/5 dark:bg-white/5 border border-[var(--accent)]/30">
                     <input
