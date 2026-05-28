@@ -545,6 +545,21 @@ export default function SettingsModal({
                           <span>32k</span>
                         </div>
                       </div>
+
+                      <div className="pt-4 border-t border-black/5 dark:border-white/5">
+                        <label className="flex items-center justify-between p-4 bg-black/10 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl cursor-pointer hover:bg-black/15 dark:hover:bg-white/10 transition-all">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-main)]">Show Model Thinking</span>
+                            <span className="text-[9px] text-neutral-500 font-semibold tracking-normal mt-0.5">Show or hide the expandable &lt;think&gt; process panel for models like DeepSeek-R1</span>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={formData.showThinking !== false}
+                            onChange={(e) => setFormData({ ...formData, showThinking: e.target.checked })}
+                            className="w-10 h-5 bg-black/20 dark:bg-white/20 rounded-full appearance-none checked:bg-[var(--accent)] transition-all relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-white before:rounded-full before:top-0.5 before:left-0.5 checked:before:left-5.5 before:transition-all"
+                          />
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </section>

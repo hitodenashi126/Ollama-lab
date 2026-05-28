@@ -30,6 +30,7 @@ export interface Settings {
   showTimestamp: boolean;
   fontFamily: 'sans' | 'serif' | 'mono';
   fontSize: number;
+  showThinking: boolean;
 }
 
 export interface OllamaModel {

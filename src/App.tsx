@@ -440,6 +440,7 @@ export default function App() {
                 viewportHeight={viewportHeight}
                 chatStyle={settings.chatStyle}
                 showTimestamp={settings.showTimestamp}
+                showThinking={settings.showThinking}
                 isConnected={isConnected}
                 onRetryConnection={fetchModels}
                 baseUrl={settings.baseUrl}

@@ -81,6 +81,7 @@ interface MessageListProps {
   onRetryConnection?: () => Promise<void>;
   baseUrl?: string;
   onOpenSettings?: () => void;
+  showThinking?: boolean;
 }
 
 export default function MessageList({
@@ -92,7 +93,8 @@ export default function MessageList({
   isConnected = true,
   onRetryConnection,
   baseUrl = 'http://localhost:11434',
-  onOpenSettings
+  onOpenSettings,
+  showThinking = true
 }: MessageListProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
@@ -138,6 +140,7 @@ export default function MessageList({
           message={message} 
           chatStyle={chatStyle} 
           showTimestamp={showTimestamp} 
+          showThinking={showThinking}
         />
       ))}
       
@@ -162,11 +165,13 @@ export default function MessageList({
 function MessageItem({ 
   message, 
   chatStyle, 
-  showTimestamp 
+  showTimestamp,
+  showThinking = true
 }: { 
   message: Message; 
   chatStyle: 'boxed' | 'unboxed'; 
   showTimestamp?: boolean; 
+  showThinking?: boolean;
 }) {
   const isAssistant = message.role === 'assistant';
   const [copied, setCopied] = React.useState(false);
@@ -252,7 +257,7 @@ function MessageItem({
                 </div>
               ) : (
                 <div className={cn("markdown-body", !isAssistant && "text-right text-white")}>
-                  {isAssistant && think && (
+                  {isAssistant && think && showThinking && (
                     <ThinkBlock content={think} isGenerating={thinking} />
                   )}
                   {(!isAssistant || main.trim() !== '' || !thinking) && (
@@ -351,7 +356,7 @@ function MessageItem({
                 </div>
               ) : (
                 <div className="markdown-body">
-                  {isAssistant && think && (
+                  {isAssistant && think && showThinking && (
                     <ThinkBlock content={think} isGenerating={thinking} />
                   )}
                   {(!isAssistant || main.trim() !== '' || !thinking) && (

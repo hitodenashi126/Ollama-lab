@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showTimestamp: true,
   fontFamily: 'sans',
   fontSize: 14,
+  showThinking: true,
 };
 
 export class OllamaError extends Error {
