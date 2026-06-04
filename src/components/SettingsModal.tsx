@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
 import { toast } from 'sonner';
+import { speakHelper, stopHelper } from '../lib/ttsHelper';
 
 interface SettingsModalProps {
   settings: Settings;
@@ -182,9 +183,7 @@ export default function SettingsModal({
 
   const handleTestOnnxSpeech = () => {
     if (isOnnxTestSpeaking) {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      stopHelper();
       setIsOnnxTestSpeaking(false);
       setIsSynthLoading(false);
       return;
@@ -194,20 +193,13 @@ export default function SettingsModal({
     // Simulate compilation of text into phoneme lists to emulate Sherpa VITS runtime perfectly
     setTimeout(() => {
       setIsSynthLoading(false);
-      setIsOnnxTestSpeaking(true);
-
-      const utterance = new SpeechSynthesisUtterance(onnxTestText);
-      utterance.rate = (formData.ttsSpeechRate || 1.0) * 0.92;
-      utterance.pitch = (formData.ttsSpeechPitch || 1.0) * 0.95;
-
-      const stopSpeak = () => setIsOnnxTestSpeaking(false);
-      utterance.onend = stopSpeak;
-      utterance.onerror = stopSpeak;
-
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
-      }
+      speakHelper(onnxTestText, {
+        rate: (formData.ttsSpeechRate || 1.0) * 0.92,
+        pitch: (formData.ttsSpeechPitch || 1.0) * 0.95,
+        onStart: () => setIsOnnxTestSpeaking(true),
+        onEnd: () => setIsOnnxTestSpeaking(false),
+        onError: () => setIsOnnxTestSpeaking(false)
+      });
     }, 1800);
   };
 
@@ -225,38 +217,21 @@ export default function SettingsModal({
   }, []);
 
   const handleTestSpeech = () => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      toast.error('Web Speech API is not supported in this environment');
-      return;
-    }
-
     if (isTestSpeaking) {
-      window.speechSynthesis.cancel();
+      stopHelper();
       setIsTestSpeaking(false);
       return;
     }
 
     const testPhrase = "Hello from Ollama Lab. This is an live preview of the text to speech settings.";
-    const utterance = new SpeechSynthesisUtterance(testPhrase);
-
-    if (formData.ttsVoiceURI) {
-      const selectedVoice = voices.find(v => v.voiceURI === formData.ttsVoiceURI);
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      }
-    }
-    
-    // Fallbacks if not set to ensure valid speech parameters
-    utterance.rate = formData.ttsSpeechRate !== undefined ? formData.ttsSpeechRate : 1.0;
-    utterance.pitch = formData.ttsSpeechPitch !== undefined ? formData.ttsSpeechPitch : 1.0;
-
-    const stopTest = () => setIsTestSpeaking(false);
-    utterance.onend = stopTest;
-    utterance.onerror = stopTest;
-
-    window.speechSynthesis.cancel();
-    setIsTestSpeaking(true);
-    window.speechSynthesis.speak(utterance);
+    speakHelper(testPhrase, {
+      rate: formData.ttsSpeechRate !== undefined ? formData.ttsSpeechRate : 1.0,
+      pitch: formData.ttsSpeechPitch !== undefined ? formData.ttsSpeechPitch : 1.0,
+      voiceURI: formData.ttsVoiceURI,
+      onStart: () => setIsTestSpeaking(true),
+      onEnd: () => setIsTestSpeaking(false),
+      onError: () => setIsTestSpeaking(false)
+    });
   };
 
   const [presets, setPresets] = React.useState<SystemPromptPreset[]>(() => {
@@ -307,9 +282,7 @@ export default function SettingsModal({
   };
 
   const handleExit = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopHelper();
     onSave(formData);
     toast.success('Configuration autosaved');
     onClose();

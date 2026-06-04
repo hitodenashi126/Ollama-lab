@@ -13,6 +13,7 @@ import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { speakHelper, stopHelper } from '../lib/ttsHelper';
 
 interface ParsedContent {
   think: string | null;
@@ -307,9 +308,7 @@ export default function MessageList({
   // Stop synthesis sound if component unmounts
   React.useEffect(() => {
     return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      stopHelper();
     };
   }, []);
 
@@ -325,18 +324,14 @@ export default function MessageList({
     }
 
     if (activeSpeechIndex === index) {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      stopHelper();
       setActiveSpeechIndex(null);
       setOnnxGenerating(false);
       return;
     }
 
     // Cancel any current speech
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopHelper();
 
     const { main } = parseThinkingContent(text);
     const cleanText = main
@@ -352,32 +347,20 @@ export default function MessageList({
     }
 
     if (settings.ttsEngine === 'web-speech') {
-      if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-        toast.error('System voice synthesis not supported by this browser platform.');
-        return;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      
-      if (settings.ttsVoiceURI) {
-        const matchingVoice = window.speechSynthesis.getVoices().find(v => v.voiceURI === settings.ttsVoiceURI);
-        if (matchingVoice) {
-          utterance.voice = matchingVoice;
+      speakHelper(cleanText, {
+        rate: settings.ttsSpeechRate !== undefined ? settings.ttsSpeechRate : 1.0,
+        pitch: settings.ttsSpeechPitch !== undefined ? settings.ttsSpeechPitch : 1.0,
+        voiceURI: settings.ttsVoiceURI,
+        onStart: () => {
+          setActiveSpeechIndex(index);
+        },
+        onEnd: () => {
+          setActiveSpeechIndex(null);
+        },
+        onError: () => {
+          setActiveSpeechIndex(null);
         }
-      }
-
-      utterance.rate = settings.ttsSpeechRate !== undefined ? settings.ttsSpeechRate : 1.0;
-      utterance.pitch = settings.ttsSpeechPitch !== undefined ? settings.ttsSpeechPitch : 1.0;
-
-      const speechEnd = () => {
-        setActiveSpeechIndex(null);
-      };
-      
-      utterance.onend = speechEnd;
-      utterance.onerror = speechEnd;
-
-      setActiveSpeechIndex(index);
-      window.speechSynthesis.speak(utterance);
+      });
     } else if (settings.ttsEngine === 'onnx-sherpa') {
       let cachedList = ['vits-en-en_US-ljspeech-high'];
       try {
@@ -415,17 +398,19 @@ export default function MessageList({
       setTimeout(() => {
         setOnnxGenerating(false);
         // Execute speech with custom pitch/rate aligned with model characteristics
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.rate = (settings.ttsSpeechRate || 1.0) * 0.92;
-        utterance.pitch = (settings.ttsSpeechPitch || 1.0) * 0.95;
-        
-        const speechEnd = () => {
-          setActiveSpeechIndex(null);
-        };
-        utterance.onend = speechEnd;
-        utterance.onerror = speechEnd;
-
-        window.speechSynthesis.speak(utterance);
+        speakHelper(cleanText, {
+          rate: (settings.ttsSpeechRate || 1.0) * 0.92,
+          pitch: (settings.ttsSpeechPitch || 1.0) * 0.95,
+          onStart: () => {
+            setActiveSpeechIndex(index);
+          },
+          onEnd: () => {
+            setActiveSpeechIndex(null);
+          },
+          onError: () => {
+            setActiveSpeechIndex(null);
+          }
+        });
       }, 2000);
     }
   };
