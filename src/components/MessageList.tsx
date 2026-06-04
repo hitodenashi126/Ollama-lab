@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { LabIcon } from './LabIcon';
 import { OllamaTroubleshooter } from './OllamaTroubleshooter';
-import { User, Copy, Check, Save, ChevronDown, Brain, Edit, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { User, Copy, Check, Save, ChevronDown, Brain, Edit, Volume2, VolumeX, Sparkles, MoreVertical } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Tooltip } from './Tooltip';
 import { toast } from 'sonner';
@@ -18,6 +18,171 @@ interface ParsedContent {
   think: string | null;
   thinking: boolean;
   main: string;
+}
+
+interface MessageActionsDropdownProps {
+  isAssistant: boolean;
+  message: Message;
+  index: number;
+  isSpeaking: boolean;
+  isSherpaLoading: boolean;
+  onSpeakToggle?: (index: number, text: string) => void;
+  onEdit?: (content: string) => void;
+  copyToClipboard: () => void;
+  saveToFile: () => void;
+  copied: boolean;
+  theme: 'light-accent' | 'dark-white';
+}
+
+function MessageActionsDropdown({
+  isAssistant,
+  message,
+  index,
+  isSpeaking,
+  isSherpaLoading,
+  onSpeakToggle,
+  onEdit,
+  copyToClipboard,
+  saveToFile,
+  copied,
+  theme
+}: MessageActionsDropdownProps) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const toggleDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(!isOpen);
+  };
+
+  const handleAction = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+    setIsOpen(false);
+  };
+
+  const buttonStyle = theme === 'dark-white'
+    ? "text-white/60 hover:text-white hover:bg-white/10"
+    : "text-neutral-500 hover:text-[var(--text-main)] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent hover:border-black/5 dark:hover:border-white/10";
+
+  const menuStyle = theme === 'dark-white'
+    ? "bg-slate-950 border border-slate-800 shadow-xl text-white"
+    : "bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-805 shadow-xl text-[var(--text-main)]";
+
+  return (
+    <div className="relative inline-block" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={toggleDropdown}
+        className={cn(
+          "p-1.5 rounded-lg transition-all focus:outline-none active:scale-95 cursor-pointer backdrop-blur-sm",
+          buttonStyle
+        )}
+        title="Managed Options"
+      >
+        <MoreVertical className="w-4 h-4" />
+      </button>
+
+      {isOpen && (
+        <div className={cn(
+          "absolute right-0 mt-1 w-44 rounded-xl py-1.5 z-40 text-left font-semibold text-[11px] uppercase tracking-wider shadow-lg animate-fade-in origin-top-right",
+          menuStyle
+        )}>
+          {isAssistant ? (
+            <>
+              {onSpeakToggle && (
+                <button
+                  type="button"
+                  onClick={(e) => handleAction(e, () => onSpeakToggle(index, message.content))}
+                  className={cn(
+                    "w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left",
+                    isSpeaking ? "text-[var(--accent)] font-bold" : "text-neutral-500 hover:text-[var(--text-main)]"
+                  )}
+                >
+                  {isSpeaking ? (
+                    isSherpaLoading ? (
+                      <Sparkles className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
+                    ) : (
+                      <VolumeX className="w-3.5 h-3.5 text-red-500" />
+                    )
+                  ) : (
+                    <Volume2 className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isSpeaking ? (isSherpaLoading ? "Synthesizing" : "Mute Sound") : "Read Response"}</span>
+                </button>
+              )}
+              
+              <button
+                type="button"
+                onClick={(e) => handleAction(e, () => {
+                  copyToClipboard();
+                  toast.success('Response copied to clipboard');
+                })}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/5 text-neutral-500 hover:text-[var(--text-main)] transition-colors text-left"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-green-550" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>Copy Body</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => handleAction(e, () => {
+                  saveToFile();
+                  toast.success('Response saved as markdown');
+                })}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/5 text-neutral-500 hover:text-[var(--text-main)] transition-colors text-left"
+              >
+                <Save className="w-3.5 h-3.5 animate-pulse" />
+                <span>Save Markdown</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={(e) => handleAction(e, () => {
+                  copyToClipboard();
+                  toast.success('Prompt copied to clipboard');
+                })}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/5 text-neutral-500 hover:text-[var(--text-main)] transition-colors text-left"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-green-550" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>Copy Prompt</span>
+              </button>
+
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={(e) => handleAction(e, () => {
+                    onEdit(message.content);
+                    toast.info('Prompt loaded to input');
+                  })}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/5 text-neutral-500 hover:text-[var(--text-main)] transition-colors text-left"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  <span>Refine / Edit</span>
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function parseThinkingContent(content: string): ParsedContent {
@@ -450,11 +615,30 @@ function MessageItem({
         )}>
           {chatStyle === 'boxed' ? (
             <div className={cn(
-              "relative p-5 rounded-xl transition-all w-full",
+              "relative p-5 rounded-xl transition-all w-full pr-10",
               isAssistant 
                 ? "bg-[var(--surface)] border border-[var(--surface-border)] shadow-xl shadow-black/5" 
                 : "bg-blue-600 border border-blue-500 text-white shadow-lg shadow-blue-600/20 text-left"
             )}>
+              {/* Dynamic Managed Options 3-Dot Dropdown */}
+              {message.content && (
+                <div className="absolute right-3 top-3 z-30 opacity-100 md:opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all duration-200">
+                  <MessageActionsDropdown 
+                    isAssistant={isAssistant}
+                    message={message}
+                    index={index}
+                    isSpeaking={isSpeaking}
+                    isSherpaLoading={isSherpaLoading}
+                    onSpeakToggle={onSpeakToggle}
+                    onEdit={onEdit}
+                    copyToClipboard={copyToClipboard}
+                    saveToFile={saveToFile}
+                    copied={copied}
+                    theme={isAssistant ? 'light-accent' : 'dark-white'}
+                  />
+                </div>
+              )}
+
               {isAssistant && isMessageBlank ? (
                 <div className="flex gap-1.5 py-2">
                   <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
@@ -488,6 +672,7 @@ function MessageItem({
                                   <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest">{match[1]}</span>
                                   <Tooltip content="Copy Code" position="top">
                                     <button
+                                      type="button"
                                       onClick={() => {
                                         navigator.clipboard.writeText(codeContent);
                                         toast.success('Code copied to clipboard');
@@ -522,93 +707,28 @@ function MessageItem({
                   )}
                 </div>
               )}
-              
-              {isAssistant && message.content && (
-                <div className="mt-4 pt-3 border-t border-[var(--surface-border)] flex items-center gap-3">
-                  {onSpeakToggle && (
-                    <Tooltip content={isSpeaking ? "Mute Voice" : "Speak Response"} position="top">
-                      <button
-                        onClick={() => onSpeakToggle(index, message.content)}
-                        className={cn(
-                          "flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest transition-all active:scale-95",
-                          isSpeaking 
-                            ? "text-[var(--accent)] animate-pulse" 
-                            : "text-neutral-500 hover:text-[var(--accent)]"
-                        )}
-                      >
-                        {isSpeaking ? (
-                          isSherpaLoading ? (
-                            <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
-                          ) : (
-                            <VolumeX className="w-3.5 h-3.5 text-red-500" />
-                          )
-                        ) : (
-                          <Volume2 className="w-3.5 h-3.5" />
-                        )}
-                        {isSpeaking ? (isSherpaLoading ? "Synthesizing" : "Mute") : "Speak"}
-                      </button>
-                    </Tooltip>
-                  )}
-                  <Tooltip content="Copy Response" position="top">
-                    <button
-                      onClick={() => {
-                        copyToClipboard();
-                        toast.success('Response copied to clipboard');
-                      }}
-                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-all active:scale-95"
-                    >
-                      {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                      Copy
-                    </button>
-                  </Tooltip>
-                  <Tooltip content="Save as Markdown" position="top">
-                    <button
-                      onClick={() => {
-                        saveToFile();
-                        toast.success('Response saved as markdown');
-                      }}
-                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-all active:scale-95"
-                    >
-                      <Save className="w-3 h-3" />
-                      Export
-                    </button>
-                  </Tooltip>
-                </div>
-              )}
-              
-              {!isAssistant && message.content && (
-                <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-end gap-3">
-                  <Tooltip content="Copy Prompt" position="top">
-                    <button
-                      onClick={() => {
-                        copyToClipboard();
-                        toast.success('Prompt copied to clipboard');
-                      }}
-                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-white/60 hover:text-white transition-all active:scale-95"
-                    >
-                      {copied ? <Check className="w-3" /> : <Copy className="w-3 h-3" />}
-                      Copy
-                    </button>
-                  </Tooltip>
-                  {onEdit && (
-                    <Tooltip content="Edit original prompt" position="top">
-                      <button
-                        onClick={() => {
-                          onEdit(message.content);
-                          toast.info('Prompt copied to input field');
-                        }}
-                        className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-white/50 hover:text-white transition-all active:scale-95"
-                      >
-                        <Edit className="w-3 h-3" />
-                        Edit
-                      </button>
-                    </Tooltip>
-                  )}
-                </div>
-              )}
             </div>
           ) : (
-            <div className={cn("w-full py-2", !isAssistant && "text-left")}>
+            <div className={cn("w-full py-2 relative group/unboxed pr-10", !isAssistant && "text-left")}>
+              {/* Dynamic Managed Options 3-Dot Dropdown */}
+              {message.content && (
+                <div className="absolute right-2 top-2 z-30 opacity-100 md:opacity-0 group-hover/unboxed:opacity-100 focus-within:opacity-100 transition-all duration-200">
+                  <MessageActionsDropdown 
+                    isAssistant={isAssistant}
+                    message={message}
+                    index={index}
+                    isSpeaking={isSpeaking}
+                    isSherpaLoading={isSherpaLoading}
+                    onSpeakToggle={onSpeakToggle}
+                    onEdit={onEdit}
+                    copyToClipboard={copyToClipboard}
+                    saveToFile={saveToFile}
+                    copied={copied}
+                    theme="light-accent"
+                  />
+                </div>
+              )}
+
               {isAssistant && isMessageBlank ? (
                 <div className="flex gap-1.5 py-2">
                   <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
@@ -642,6 +762,7 @@ function MessageItem({
                                    <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest">{match[1]}</span>
                                   <Tooltip content="Copy Code" position="top">
                                     <button
+                                      type="button"
                                       onClick={() => {
                                         navigator.clipboard.writeText(codeContent);
                                         toast.success('Code copied to clipboard');
@@ -676,97 +797,32 @@ function MessageItem({
                   )}
                 </div>
               )}
-              
-              {isAssistant && message.content && (
-                <div className="flex items-center gap-4 mt-3">
-                  {onSpeakToggle && (
-                    <Tooltip content={isSpeaking ? "Mute Voice" : "Speak Response"} position="bottom">
-                      <button
-                        onClick={() => onSpeakToggle(index, message.content)}
-                        className={cn(
-                          "flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest transition-colors active:scale-95",
-                          isSpeaking 
-                            ? "text-[var(--accent)] animate-pulse" 
-                            : "text-neutral-500 hover:text-[var(--accent)]"
-                        )}
-                      >
-                        {isSpeaking ? (
-                          isSherpaLoading ? (
-                            <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
-                          ) : (
-                            <VolumeX className="w-3.5 h-3.5 text-red-500" />
-                          )
-                        ) : (
-                          <Volume2 className="w-3.5 h-3.5" />
-                        )}
-                        {isSpeaking ? (isSherpaLoading ? "Synthesizing" : "Mute") : "Speak"}
-                      </button>
-                    </Tooltip>
-                  )}
-                  <Tooltip content="Copy Response" position="bottom">
-                    <button
-                      onClick={() => {
-                        copyToClipboard();
-                        toast.success('Response copied to clipboard');
-                      }}
-                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-colors active:scale-95"
-                    >
-                      {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                      Copy
-                    </button>
-                  </Tooltip>
-                  <Tooltip content="Save as Markdown" position="bottom">
-                    <button
-                      onClick={() => {
-                        saveToFile();
-                        toast.success('Response saved as markdown');
-                      }}
-                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-colors active:scale-95"
-                    >
-                      <Save className="w-3 h-3" />
-                      Export
-                    </button>
-                  </Tooltip>
-                </div>
-              )}
-
-              {!isAssistant && message.content && (
-                <div className="flex items-center gap-4 mt-3 justify-end">
-                  <Tooltip content="Copy Prompt" position="bottom">
-                    <button
-                      onClick={() => {
-                        copyToClipboard();
-                        toast.success('Prompt copied to clipboard');
-                      }}
-                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-colors active:scale-95"
-                    >
-                      {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                      Copy
-                    </button>
-                  </Tooltip>
-                  {onEdit && (
-                    <Tooltip content="Edit original prompt" position="bottom">
-                      <button
-                        onClick={() => {
-                          onEdit(message.content);
-                          toast.info('Prompt copied to input field');
-                        }}
-                        className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-colors active:scale-95"
-                      >
-                        <Edit className="w-3 h-3" />
-                        Edit
-                      </button>
-                    </Tooltip>
-                  )}
-                </div>
-              )}
             </div>
           )}
           
           <div className={cn(
-            "flex items-center gap-2 px-1",
+            "flex items-center gap-3 px-1",
             !isAssistant && "justify-end"
           )}>
+            {isSpeaking && (
+              <span className="inline-flex items-center gap-1.5 text-[10px] uppercase font-extrabold tracking-wider text-[var(--accent)] animate-pulse">
+                {isSherpaLoading ? (
+                  <>
+                    <Sparkles className="w-3 h-3 animate-spin text-[var(--accent)]" />
+                    <span>Synthesizing Voice...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="flex gap-0.5 items-end h-3 w-3">
+                      <span className="w-0.5 bg-[var(--accent)] h-1 animate-[bounce_0.6s_infinite] [animation-delay:0.1s]" />
+                      <span className="w-0.5 bg-[var(--accent)] h-2 animate-[bounce_0.6s_infinite] [animation-delay:0.3s]" />
+                      <span className="w-0.5 bg-[var(--accent)] h-1.5 animate-[bounce_0.6s_infinite] [animation-delay:0.2s]" />
+                    </span>
+                    <span>Speaks Aloud</span>
+                  </>
+                )}
+              </span>
+            )}
             {showTimestamp && (
               <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">
                 {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
