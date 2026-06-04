@@ -1,6 +1,6 @@
 import { ChatSession, OllamaModel, Settings } from '../types';
 import { Plus, MessageSquare, Settings as SettingsIcon, Trash2, Cpu, Database, ChevronLeft, ChevronRight, Edit2, Check, X, Download, FileJson, MoreVertical } from 'lucide-react';
-import { cn, formatSize } from '../lib/utils';
+import { cn, formatSize, calculateSessionTokens } from '../lib/utils';
 import React from 'react';
 import { Tooltip } from './Tooltip';
 import { LabIcon } from './LabIcon';
@@ -216,14 +216,21 @@ export default function Sidebar({
                     <button
                       onClick={() => onSelectSession(session.id)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-left pr-16 active:scale-[0.98]",
+                        "w-full flex flex-col items-start gap-1.5 px-3 py-2.5 rounded-lg text-sm transition-all text-left pr-10 active:scale-[0.98]",
                         currentSessionId === session.id
                           ? "bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30"
                           : "text-neutral-500 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-[var(--text-main)] transition-colors"
                       )}
                     >
-                      <MessageSquare className="w-4 h-4 shrink-0 opacity-60" />
-                      {!isCollapsed && <span className="truncate transition-colors">{session.title}</span>}
+                      <div className="flex items-center gap-2.5 w-full min-w-0">
+                        <MessageSquare className="w-4 h-4 shrink-0 opacity-60 text-current" />
+                        {!isCollapsed && <span className="truncate transition-colors font-medium">{session.title}</span>}
+                      </div>
+                      {!isCollapsed && session.messages.length > 0 && (
+                        <div className="text-[9px] font-mono font-semibold tracking-wider text-neutral-500 pl-6.5 select-none uppercase">
+                          {session.messages.length} msg • {calculateSessionTokens(session).totalTokens.toLocaleString()} tkn
+                        </div>
+                      )}
                     </button>
                     {!isCollapsed && (
                       <div className="absolute right-2 top-1/2 -translate-y-1/2">

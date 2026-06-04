@@ -5,7 +5,7 @@ import {
   Server, Layout, Sliders, ShieldCheck, Settings as SettingsIcon, 
   Moon, Sun, AlertTriangle, Monitor, Palette, Box, MessageSquare, 
   Database, Download, Trash2, CheckCircle2, Clock, RotateCcw,
-  ChevronLeft
+  ChevronLeft, X
 } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
 import { toast } from 'sonner';
@@ -115,6 +115,15 @@ export default function SettingsModal({
               <span className="text-[var(--accent)] font-bold">{currentCategoryName}</span>
             </button>
           )}
+
+          <button
+            onClick={handleExit}
+            className="p-2 -mr-1 rounded-xl text-neutral-400 hover:text-[var(--text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-all cursor-pointer active:scale-95 duration-150"
+            title="Save and exit"
+            aria-label="Close settings"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Core Scrolling Area */}
@@ -575,19 +584,10 @@ export default function SettingsModal({
         </div>
 
         {/* Unified Bottom Footer */}
-        <div className="p-4 md:p-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-5 bg-black/10 dark:bg-white/[0.01] border-t border-[var(--surface-border)] flex items-center justify-between shrink-0 gap-4">
+        <div className="p-4 md:p-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-5 bg-black/10 dark:bg-white/[0.01] border-t border-[var(--surface-border)] flex items-center justify-center shrink-0">
           <div className="flex items-center gap-1.5 text-[var(--accent)] text-[8px] font-bold uppercase tracking-widest pl-1 leading-none">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Local & Private Sandbox</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleExit}
-              className="px-7 py-3 rounded-xl text-[10px] font-bold bg-[var(--accent)] text-[var(--accent-text)] hover:opacity-90 shadow-xl shadow-[var(--accent)]/15 active:scale-[0.98] transition-all uppercase tracking-widest whitespace-nowrap outline-none cursor-pointer"
-            >
-              Close
-            </button>
+            <span>Local & Private Sandbox</span>
           </div>
         </div>
       </div>

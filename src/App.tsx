@@ -7,8 +7,11 @@ import SettingsModal from './components/SettingsModal';
 import { ChatSession, Message, Settings, OllamaModel, FileAttachment } from './types';
 import { DEFAULT_SETTINGS, listModels, chatStream } from './lib/ollama';
 import { v4 as uuidv4 } from 'uuid';
-import { Menu, AlertTriangle } from 'lucide-react';
+import { Menu, AlertTriangle, Cpu } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
+import { calculateSessionTokens, cn } from './lib/utils';
+import { Tooltip } from './components/Tooltip';
+
 
 export default function App() {
   const [sessions, setSessions] = React.useState<ChatSession[]>(() => {
@@ -377,7 +380,10 @@ export default function App() {
     return {};
   };
 
+  const tokenUsage = calculateSessionTokens(currentSession, settings.systemPrompt);
+
   return (
+
     <div 
       style={{ height: viewportHeight }}
       className="flex w-full relative overflow-hidden text-[var(--text-main)] selection:bg-blue-500 selection:text-white"
@@ -407,30 +413,65 @@ export default function App() {
 
           <main className="flex-1 flex flex-col min-w-0 relative h-full">
             <header className="h-16 border-b border-[var(--surface-border)] flex items-center justify-between bg-white/[0.01] px-4 md:px-6 shrink-0 relative z-10 transition-colors">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <button
                   onClick={() => setIsMobileMenuOpen(true)}
-                  className="md:hidden p-2 -ml-2 rounded-lg hover:bg-white/10 text-neutral-400"
+                  className="md:hidden p-2 -ml-2 rounded-lg hover:bg-white/10 text-neutral-400 shrink-0"
                 >
                   <Menu className="w-5 h-5" />
                 </button>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-[var(--text-main)] transition-colors">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-[var(--text-main)] transition-colors truncate">
                     {currentSession?.title || 'No active session'}
                   </span>
-                  <span className="text-[10px] text-neutral-400 font-medium uppercase tracking-wider">
+                  <span className="text-[10px] text-neutral-400 font-medium uppercase tracking-wider truncate">
                     {selectedModel ? `Model: ${selectedModel}` : 'Select a model'}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <LabIcon size={20} className={isConnected ? "text-green-500" : "text-red-500"} />
-                <div className={`w-1.5 h-1.5 rounded-full animate-pulse transition-all duration-500 ${
-                  isConnected ? "bg-green-500 shadow-[0_0_8px_#22c55e]" : "bg-red-500 shadow-[0_0_8px_#ef4444]"
-                }`} />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 hidden sm:inline transition-colors">
-                  {isConnected ? 'Local Instance Connected' : 'Ollama Offline - Retrying...'}
-                </span>
+              <div className="flex items-center gap-4 shrink-0">
+                {/* Live Conversation Token Usage Estimation */}
+                {currentSession && currentSession.messages.length > 0 && (
+                  <Tooltip 
+                    content={`User Prompt: ${tokenUsage.promptTokens.toLocaleString()} tkn | Assistant Response: ${tokenUsage.completionTokens.toLocaleString()} tkn. Est. API Cost equivalent: ~$${(tokenUsage.totalTokens * 0.0000015).toFixed(5)}`}
+                    position="bottom"
+                  >
+                    <div className="flex items-center gap-2 px-2.5 py-1.5 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl cursor-help hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                      <Cpu className="w-3.5 h-3.5 text-[var(--accent)]" />
+                      <div className="flex flex-col items-start leading-[1.1]">
+                        <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-widest hidden xs:inline">Usage</span>
+                        <span className="text-[10px] font-mono font-bold text-[var(--text-main)]">
+                          {tokenUsage.totalTokens.toLocaleString()}<span className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest sm:inline ml-0.5">tkn</span>
+                        </span>
+                      </div>
+                      
+                      {/* Context Limit Progress Bar */}
+                      <div className="w-8 h-1 bg-black/15 dark:bg-white/10 rounded-full overflow-hidden hidden md:block">
+                        <div 
+                          className={cn(
+                            "h-full rounded-full transition-all duration-300",
+                            (tokenUsage.totalTokens / settings.numCtx) > 0.85 
+                              ? "bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.5)]" 
+                              : (tokenUsage.totalTokens / settings.numCtx) > 0.6 
+                                ? "bg-yellow-500 shadow-[0_0_4px_rgba(234,179,8,0.5)]" 
+                                : "bg-[var(--accent)] shadow-[0_0_4px_rgba(var(--accent-rgb),0.5)]"
+                          )}
+                          style={{ width: `${Math.min(100, (tokenUsage.totalTokens / settings.numCtx) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </Tooltip>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <LabIcon size={20} className={isConnected ? "text-green-500" : "text-red-500"} />
+                  <div className={`w-1.5 h-1.5 rounded-full animate-pulse transition-all duration-500 ${
+                    isConnected ? "bg-green-500 shadow-[0_0_8px_#22c55e]" : "bg-red-500 shadow-[0_0_8px_#ef4444]"
+                  }`} />
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 hidden sm:inline transition-colors truncate">
+                    {isConnected ? 'Connected' : 'Offline'}
+                  </span>
+                </div>
               </div>
             </header>
 
