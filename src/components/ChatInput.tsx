@@ -13,6 +13,8 @@ interface ChatInputProps {
   onSelectModel: (model: string) => void;
   onStop?: () => void;
   isTyping?: boolean;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 
 interface AttachedFile {
@@ -36,9 +38,20 @@ export default function ChatInput({
   models, 
   onSelectModel,
   onStop,
-  isTyping 
+  isTyping,
+  value,
+  onChange
 }: ChatInputProps) {
-  const [input, setInput] = React.useState('');
+  const [localInput, setLocalInput] = React.useState('');
+  const isControlled = value !== undefined && onChange !== undefined;
+  const input = isControlled ? value : localInput;
+  const setInput = (val: string) => {
+    if (isControlled) {
+      onChange(val);
+    } else {
+      setLocalInput(val);
+    }
+  };
   const [attachedFiles, setAttachedFiles] = React.useState<AttachedFile[]>([]);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = React.useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);

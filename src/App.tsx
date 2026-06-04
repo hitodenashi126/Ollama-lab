@@ -36,6 +36,7 @@ export default function App() {
   const [isLoadingModels, setIsLoadingModels] = React.useState(false);
   const [isStreaming, setIsStreaming] = React.useState(false);
   const [pullProgress, setPullProgress] = React.useState<{ status: string; percentage?: number } | null>(null);
+  const [chatInput, setChatInput] = React.useState('');
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [viewportHeight, setViewportHeight] = React.useState('100dvh');
@@ -445,10 +446,13 @@ export default function App() {
                 onRetryConnection={fetchModels}
                 baseUrl={settings.baseUrl}
                 onOpenSettings={() => setIsSettingsOpen(true)}
+                onEditMessage={setChatInput}
               />
               
               <div className="bg-gradient-to-t from-black/20 to-transparent pt-12">
                 <ChatInput 
+                  value={chatInput}
+                  onChange={setChatInput}
                   onSend={handleSendMessage} 
                   disabled={isStreaming} 
                   selectedModel={selectedModel}

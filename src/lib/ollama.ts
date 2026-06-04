@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS: Settings = {
   fontFamily: 'sans',
   fontSize: 14,
   showThinking: true,
+  enableOllamaReasoning: true,
 };
 
 export class OllamaError extends Error {
@@ -80,6 +81,7 @@ export async function chatStream(
         temperature: settings.temperature,
         top_p: settings.topP,
         num_ctx: settings.numCtx,
+        thinking: settings.enableOllamaReasoning !== false,
       },
       stream: true,
     }),

@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { LabIcon } from './LabIcon';
 import { OllamaTroubleshooter } from './OllamaTroubleshooter';
-import { User, Copy, Check, Save, ChevronDown, Brain } from 'lucide-react';
+import { User, Copy, Check, Save, ChevronDown, Brain, Edit } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Tooltip } from './Tooltip';
 import { toast } from 'sonner';
@@ -82,6 +82,7 @@ interface MessageListProps {
   baseUrl?: string;
   onOpenSettings?: () => void;
   showThinking?: boolean;
+  onEditMessage?: (content: string) => void;
 }
 
 export default function MessageList({
@@ -94,7 +95,8 @@ export default function MessageList({
   onRetryConnection,
   baseUrl = 'http://localhost:11434',
   onOpenSettings,
-  showThinking = true
+  showThinking = true,
+  onEditMessage
 }: MessageListProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
@@ -141,6 +143,7 @@ export default function MessageList({
           chatStyle={chatStyle} 
           showTimestamp={showTimestamp} 
           showThinking={showThinking}
+          onEdit={onEditMessage}
         />
       ))}
       
@@ -166,12 +169,14 @@ function MessageItem({
   message, 
   chatStyle, 
   showTimestamp,
-  showThinking = true
+  showThinking = true,
+  onEdit
 }: { 
   message: Message; 
   chatStyle: 'boxed' | 'unboxed'; 
   showTimestamp?: boolean; 
   showThinking?: boolean;
+  onEdit?: (content: string) => void;
 }) {
   const isAssistant = message.role === 'assistant';
   const [copied, setCopied] = React.useState(false);
@@ -247,7 +252,7 @@ function MessageItem({
               "relative p-5 rounded-xl transition-all w-full",
               isAssistant 
                 ? "bg-[var(--surface)] border border-[var(--surface-border)] shadow-xl shadow-black/5" 
-                : "bg-blue-600 border border-blue-500 text-white shadow-lg shadow-blue-600/20 text-right"
+                : "bg-blue-600 border border-blue-500 text-white shadow-lg shadow-blue-600/20 text-left"
             )}>
               {isAssistant && isMessageBlank ? (
                 <div className="flex gap-1.5 py-2">
@@ -256,7 +261,7 @@ function MessageItem({
                   <span className="w-2 h-2 bg-blue-500/30 rounded-full animate-bounce [animation-delay:0.4s]" />
                 </div>
               ) : (
-                <div className={cn("markdown-body", !isAssistant && "text-right text-white")}>
+                <div className={cn("markdown-body", !isAssistant && "text-left text-white")}>
                   {isAssistant && think && showThinking && (
                     <ThinkBlock content={think} isGenerating={thinking} />
                   )}
@@ -345,9 +350,40 @@ function MessageItem({
                   </Tooltip>
                 </div>
               )}
+              
+              {!isAssistant && message.content && (
+                <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-end gap-3">
+                  <Tooltip content="Copy Prompt" position="top">
+                    <button
+                      onClick={() => {
+                        copyToClipboard();
+                        toast.success('Prompt copied to clipboard');
+                      }}
+                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-white/60 hover:text-white transition-all active:scale-95"
+                    >
+                      {copied ? <Check className="w-3" /> : <Copy className="w-3 h-3" />}
+                      Copy
+                    </button>
+                  </Tooltip>
+                  {onEdit && (
+                    <Tooltip content="Edit original prompt" position="top">
+                      <button
+                        onClick={() => {
+                          onEdit(message.content);
+                          toast.info('Prompt copied to input field');
+                        }}
+                        className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-white/50 hover:text-white transition-all active:scale-95"
+                      >
+                        <Edit className="w-3 h-3" />
+                        Edit
+                      </button>
+                    </Tooltip>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
-            <div className={cn("w-full py-2", !isAssistant && "text-right")}>
+            <div className={cn("w-full py-2", !isAssistant && "text-left")}>
               {isAssistant && isMessageBlank ? (
                 <div className="flex gap-1.5 py-2">
                   <span className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
@@ -442,6 +478,37 @@ function MessageItem({
                       Export
                     </button>
                   </Tooltip>
+                </div>
+              )}
+
+              {!isAssistant && message.content && (
+                <div className="flex items-center gap-4 mt-3 justify-end">
+                  <Tooltip content="Copy Prompt" position="bottom">
+                    <button
+                      onClick={() => {
+                        copyToClipboard();
+                        toast.success('Prompt copied to clipboard');
+                      }}
+                      className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-colors active:scale-95"
+                    >
+                      {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                      Copy
+                    </button>
+                  </Tooltip>
+                  {onEdit && (
+                    <Tooltip content="Edit original prompt" position="bottom">
+                      <button
+                        onClick={() => {
+                          onEdit(message.content);
+                          toast.info('Prompt copied to input field');
+                        }}
+                        className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-neutral-500 hover:text-[var(--accent)] transition-colors active:scale-95"
+                      >
+                        <Edit className="w-3 h-3" />
+                        Edit
+                      </button>
+                    </Tooltip>
+                  )}
                 </div>
               )}
             </div>

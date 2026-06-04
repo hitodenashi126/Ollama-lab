@@ -2,7 +2,7 @@ import React from 'react';
 import { Settings, OllamaModel } from '../types';
 import { DEFAULT_SETTINGS } from '../lib/ollama';
 import { 
-  X, Server, Layout, Sliders, ShieldCheck, Settings as SettingsIcon, 
+  Server, Layout, Sliders, ShieldCheck, Settings as SettingsIcon, 
   Moon, Sun, AlertTriangle, Monitor, Palette, Box, MessageSquare, 
   Database, Download, Trash2, CheckCircle2, Clock, RotateCcw,
   ChevronLeft
@@ -35,9 +35,9 @@ export default function SettingsModal({
   const [activeCategory, setActiveCategory] = React.useState<Category | null>(null);
   const [newModelName, setNewModelName] = React.useState('');
 
-  const handleSave = () => {
+  const handleExit = () => {
     onSave(formData);
-    toast.success('Configuration saved successfully');
+    toast.success('Configuration autosaved');
     onClose();
   };
 
@@ -89,7 +89,7 @@ export default function SettingsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4">
       <div
-        onClick={onClose}
+        onClick={handleExit}
         className="absolute inset-0 bg-black/75 backdrop-blur-md animate-fade-in"
       />
       <div
@@ -115,13 +115,6 @@ export default function SettingsModal({
               <span className="text-[var(--accent)] font-bold">{currentCategoryName}</span>
             </button>
           )}
-
-          <button 
-            onClick={onClose} 
-            className="p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors text-neutral-500 hover:text-[var(--text-main)]"
-          >
-            <X className="w-4.5 h-4.5" />
-          </button>
         </div>
 
         {/* Core Scrolling Area */}
@@ -546,7 +539,20 @@ export default function SettingsModal({
                         </div>
                       </div>
 
-                      <div className="pt-4 border-t border-black/5 dark:border-white/5">
+                      <div className="pt-4 border-t border-black/5 dark:border-white/5 space-y-4">
+                        <label className="flex items-center justify-between p-4 bg-black/10 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl cursor-pointer hover:bg-black/15 dark:hover:bg-white/10 transition-all">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-main)]">Model Reasoning (Ollama API)</span>
+                            <span className="text-[9px] text-neutral-500 font-semibold tracking-normal mt-0.5">Pass thinking parameter to the Ollama server to enable or disable internal reasoning</span>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={formData.enableOllamaReasoning !== false}
+                            onChange={(e) => setFormData({ ...formData, enableOllamaReasoning: e.target.checked })}
+                            className="w-10 h-5 bg-black/20 dark:bg-white/20 rounded-full appearance-none checked:bg-[var(--accent)] transition-all relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-white before:rounded-full before:top-0.5 before:left-0.5 checked:before:left-5.5 before:transition-all"
+                          />
+                        </label>
+
                         <label className="flex items-center justify-between p-4 bg-black/10 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl cursor-pointer hover:bg-black/15 dark:hover:bg-white/10 transition-all">
                           <div className="flex flex-col">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-main)]">Show Model Thinking</span>
@@ -577,16 +583,10 @@ export default function SettingsModal({
 
           <div className="flex items-center gap-3">
             <button
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-xl text-[10px] font-bold text-neutral-500 dark:text-neutral-400 hover:text-[var(--text-main)] transition-all uppercase tracking-widest"
+              onClick={handleExit}
+              className="px-7 py-3 rounded-xl text-[10px] font-bold bg-[var(--accent)] text-[var(--accent-text)] hover:opacity-90 shadow-xl shadow-[var(--accent)]/15 active:scale-[0.98] transition-all uppercase tracking-widest whitespace-nowrap outline-none cursor-pointer"
             >
-              Discard
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-7 py-3 rounded-xl text-[10px] font-bold bg-[var(--accent)] text-[var(--accent-text)] hover:opacity-90 shadow-xl shadow-[var(--accent)]/15 active:scale-[0.98] transition-all uppercase tracking-widest whitespace-nowrap outline-none"
-            >
-              Save Configuration
+              Close
             </button>
           </div>
         </div>

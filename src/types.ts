@@ -31,6 +31,7 @@ export interface Settings {
   fontFamily: 'sans' | 'serif' | 'mono';
   fontSize: number;
   showThinking: boolean;
+  enableOllamaReasoning: boolean;
 }
 
 export interface OllamaModel {
