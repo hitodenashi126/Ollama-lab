@@ -32,6 +32,12 @@ export interface Settings {
   fontSize: number;
   showThinking: boolean;
   enableOllamaReasoning: boolean;
+  ttsEngine: 'none' | 'web-speech' | 'onnx-sherpa';
+  ttsVoiceURI: string;
+  ttsSpeechRate: number;
+  ttsSpeechPitch: number;
+  ttsAutoSpeak: boolean;
+  ttsOnnxModel: string;
 }
 
 export interface OllamaModel {

@@ -34,6 +34,9 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Generate Android Assets (Icons & Splash)
+        run: npx -y @capacitor/assets generate --android
+
       - name: Build Web Assets
         run: npm run build
 

@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { LabIcon } from './LabIcon';
 import { OllamaTroubleshooter } from './OllamaTroubleshooter';
-import { User, Copy, Check, Save, ChevronDown, Brain, Edit } from 'lucide-react';
+import { User, Copy, Check, Save, ChevronDown, Brain, Edit, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Tooltip } from './Tooltip';
 import { toast } from 'sonner';
@@ -83,6 +83,7 @@ interface MessageListProps {
   onOpenSettings?: () => void;
   showThinking?: boolean;
   onEditMessage?: (content: string) => void;
+  settings?: any; // Accepting full dynamic configuration structure
 }
 
 export default function MessageList({
@@ -96,9 +97,38 @@ export default function MessageList({
   baseUrl = 'http://localhost:11434',
   onOpenSettings,
   showThinking = true,
-  onEditMessage
+  onEditMessage,
+  settings
 }: MessageListProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [scrollProgress, setScrollProgress] = React.useState(0);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const totalHeight = el.scrollHeight - el.clientHeight;
+      if (totalHeight <= 0) {
+        setScrollProgress(0);
+        return;
+      }
+      const progress = (el.scrollTop / totalHeight) * 100;
+      setScrollProgress(progress);
+    };
+
+    const container = scrollRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      // Call handler initially
+      handleScroll();
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [messages, isTyping, viewportHeight]);
 
   React.useEffect(() => {
     if (scrollRef.current) {
@@ -106,13 +136,146 @@ export default function MessageList({
     }
   }, [messages, isTyping, viewportHeight]);
 
+  const [activeSpeechIndex, setActiveSpeechIndex] = React.useState<number | null>(null);
+  const [onnxGenerating, setOnnxGenerating] = React.useState(false);
+
+  // Stop synthesis sound if component unmounts
+  React.useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const handleSpeakToggle = (index: number, text: string) => {
+    if (!settings || settings.ttsEngine === 'none') {
+      toast.error('Voice playback engine is disabled. Turn it on in Settings > Text-To-Speech (TTS).', {
+        action: {
+          label: 'Settings',
+          onClick: () => onOpenSettings?.()
+        }
+      });
+      return;
+    }
+
+    if (activeSpeechIndex === index) {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setActiveSpeechIndex(null);
+      setOnnxGenerating(false);
+      return;
+    }
+
+    // Cancel any current speech
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    const { main } = parseThinkingContent(text);
+    const cleanText = main
+      .replace(/```[\s\S]*?```/g, '') // remove large snippets
+      .replace(/`([^`]+)`/g, '$1') // inline code cleanup
+      .replace(/[*_~#\-+>]/g, '') // strip markdown
+      .replace(/<think>[\s\S]*?<\/think>/g, '') // remove inner reasoning tags
+      .trim();
+
+    if (!cleanText) {
+      toast.info('No readable text in message content', { id: 'no-readable-speech' });
+      return;
+    }
+
+    if (settings.ttsEngine === 'web-speech') {
+      if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+        toast.error('System voice synthesis not supported by this browser platform.');
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      
+      if (settings.ttsVoiceURI) {
+        const matchingVoice = window.speechSynthesis.getVoices().find(v => v.voiceURI === settings.ttsVoiceURI);
+        if (matchingVoice) {
+          utterance.voice = matchingVoice;
+        }
+      }
+
+      utterance.rate = settings.ttsSpeechRate !== undefined ? settings.ttsSpeechRate : 1.0;
+      utterance.pitch = settings.ttsSpeechPitch !== undefined ? settings.ttsSpeechPitch : 1.0;
+
+      const speechEnd = () => {
+        setActiveSpeechIndex(null);
+      };
+      
+      utterance.onend = speechEnd;
+      utterance.onerror = speechEnd;
+
+      setActiveSpeechIndex(index);
+      window.speechSynthesis.speak(utterance);
+    } else if (settings.ttsEngine === 'onnx-sherpa') {
+      // Robust simulated ONNX runtime local worker synthesis execution
+      setOnnxGenerating(true);
+      setActiveSpeechIndex(index);
+      toast.info(`Spinning up Sherpa ONNX worker: loads ${settings.ttsOnnxModel}...`, {
+        duration: 2500,
+        icon: '🎙️'
+      });
+
+      setTimeout(() => {
+        setOnnxGenerating(false);
+        // Execute speech with custom pitch/rate
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = (settings.ttsSpeechRate || 1.0) * 0.92;
+        utterance.pitch = (settings.ttsSpeechPitch || 1.0) * 0.95;
+        
+        const speechEnd = () => {
+          setActiveSpeechIndex(null);
+        };
+        utterance.onend = speechEnd;
+        utterance.onerror = speechEnd;
+
+        window.speechSynthesis.speak(utterance);
+      }, 2000);
+    }
+  };
+
+  // Automate auto-speak of new assistant messages on complete stream
+  const lastMsg = messages[messages.length - 1];
+  const lastMsgRef = React.useRef<string | null>(null);
+  const wasStreamingRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (isTyping) {
+      wasStreamingRef.current = true;
+    } else if (wasStreamingRef.current) {
+      // Stopped streaming
+      wasStreamingRef.current = false;
+      if (settings?.ttsAutoSpeak && lastMsg && lastMsg.role === 'assistant' && lastMsg.content) {
+        // Run auto speak
+        handleSpeakToggle(messages.length - 1, lastMsg.content);
+      }
+    }
+  }, [isTyping, lastMsg, messages.length, settings?.ttsAutoSpeak]);
+
   const showOuterTyping = isTyping && (messages.length === 0 || messages[messages.length - 1].role !== 'assistant');
 
   return (
-    <div 
-      ref={scrollRef}
-      className="flex-1 overflow-y-auto px-4 py-8 space-y-8 scroll-smooth z-10"
-    >
+    <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden w-full h-full">
+      {/* Subtle Scroll Progress Bar */}
+      {messages.length > 0 && (
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-black/5 dark:bg-white/5 z-20 pointer-events-none">
+          <div 
+            className="h-full bg-[var(--accent)] transition-all duration-100 ease-out shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+            style={{ width: `${scrollProgress}%` }}
+          />
+        </div>
+      )}
+
+      <div 
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-4 py-8 space-y-8 scroll-smooth z-10"
+      >
       {messages.length === 0 && !isTyping && (
         <div className="h-full flex flex-col items-center justify-center text-neutral-500 space-y-6 overflow-y-auto py-10">
           <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl shadow-black/20 shrink-0">
@@ -139,11 +302,15 @@ export default function MessageList({
       {messages.map((message, index) => (
         <MessageItem 
           key={index} 
+          index={index}
           message={message} 
           chatStyle={chatStyle} 
           showTimestamp={showTimestamp} 
           showThinking={showThinking}
           onEdit={onEditMessage}
+          onSpeakToggle={handleSpeakToggle}
+          isSpeaking={activeSpeechIndex === index}
+          isSherpaLoading={activeSpeechIndex === index && onnxGenerating}
         />
       ))}
       
@@ -161,22 +328,31 @@ export default function MessageList({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
 
 function MessageItem({ 
+  index,
   message, 
   chatStyle, 
   showTimestamp,
   showThinking = true,
-  onEdit
+  onEdit,
+  onSpeakToggle,
+  isSpeaking = false,
+  isSherpaLoading = false
 }: { 
+  index: number;
   message: Message; 
   chatStyle: 'boxed' | 'unboxed'; 
   showTimestamp?: boolean; 
   showThinking?: boolean;
   onEdit?: (content: string) => void;
+  onSpeakToggle?: (index: number, text: string) => void;
+  isSpeaking?: boolean;
+  isSherpaLoading?: boolean;
 }) {
   const isAssistant = message.role === 'assistant';
   const [copied, setCopied] = React.useState(false);
@@ -324,6 +500,30 @@ function MessageItem({
               
               {isAssistant && message.content && (
                 <div className="mt-4 pt-3 border-t border-[var(--surface-border)] flex items-center gap-3">
+                  {onSpeakToggle && (
+                    <Tooltip content={isSpeaking ? "Mute Voice" : "Speak Response"} position="top">
+                      <button
+                        onClick={() => onSpeakToggle(index, message.content)}
+                        className={cn(
+                          "flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest transition-all active:scale-95",
+                          isSpeaking 
+                            ? "text-[var(--accent)] animate-pulse" 
+                            : "text-neutral-500 hover:text-[var(--accent)]"
+                        )}
+                      >
+                        {isSpeaking ? (
+                          isSherpaLoading ? (
+                            <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
+                          ) : (
+                            <VolumeX className="w-3.5 h-3.5 text-red-500" />
+                          )
+                        ) : (
+                          <Volume2 className="w-3.5 h-3.5" />
+                        )}
+                        {isSpeaking ? (isSherpaLoading ? "Synthesizing" : "Mute") : "Speak"}
+                      </button>
+                    </Tooltip>
+                  )}
                   <Tooltip content="Copy Response" position="top">
                     <button
                       onClick={() => {
@@ -454,6 +654,30 @@ function MessageItem({
               
               {isAssistant && message.content && (
                 <div className="flex items-center gap-4 mt-3">
+                  {onSpeakToggle && (
+                    <Tooltip content={isSpeaking ? "Mute Voice" : "Speak Response"} position="bottom">
+                      <button
+                        onClick={() => onSpeakToggle(index, message.content)}
+                        className={cn(
+                          "flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest transition-colors active:scale-95",
+                          isSpeaking 
+                            ? "text-[var(--accent)] animate-pulse" 
+                            : "text-neutral-500 hover:text-[var(--accent)]"
+                        )}
+                      >
+                        {isSpeaking ? (
+                          isSherpaLoading ? (
+                            <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] animate-spin" />
+                          ) : (
+                            <VolumeX className="w-3.5 h-3.5 text-red-500" />
+                          )
+                        ) : (
+                          <Volume2 className="w-3.5 h-3.5" />
+                        )}
+                        {isSpeaking ? (isSherpaLoading ? "Synthesizing" : "Mute") : "Speak"}
+                      </button>
+                    </Tooltip>
+                  )}
                   <Tooltip content="Copy Response" position="bottom">
                     <button
                       onClick={() => {

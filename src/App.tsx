@@ -488,6 +488,7 @@ export default function App() {
                 baseUrl={settings.baseUrl}
                 onOpenSettings={() => setIsSettingsOpen(true)}
                 onEditMessage={setChatInput}
+                settings={settings}
               />
               
               <div className="bg-gradient-to-t from-black/20 to-transparent pt-12">

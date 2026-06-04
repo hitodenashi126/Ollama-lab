@@ -14,6 +14,12 @@ export const DEFAULT_SETTINGS: Settings = {
   fontSize: 14,
   showThinking: true,
   enableOllamaReasoning: true,
+  ttsEngine: 'none',
+  ttsVoiceURI: '',
+  ttsSpeechRate: 1.0,
+  ttsSpeechPitch: 1.0,
+  ttsAutoSpeak: false,
+  ttsOnnxModel: 'vits-en-en_US-ljspeech-high',
 };
 
 export class OllamaError extends Error {

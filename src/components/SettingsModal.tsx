@@ -5,7 +5,7 @@ import {
   Server, Layout, Sliders, ShieldCheck, Settings as SettingsIcon, 
   Moon, Sun, AlertTriangle, Monitor, Palette, Box, MessageSquare, 
   Database, Download, Trash2, CheckCircle2, Clock, RotateCcw,
-  ChevronLeft, X
+  ChevronLeft, X, Bookmark, Plus, Sparkles, Volume2, AudioLines, Play, Square, Headphones
 } from 'lucide-react';
 import { cn, formatSize } from '../lib/utils';
 import { toast } from 'sonner';
@@ -20,7 +20,47 @@ interface SettingsModalProps {
   pullProgress: { status: string; percentage?: number } | null;
 }
 
-type Category = 'general' | 'models' | 'chat-ui' | 'parameters';
+interface SystemPromptPreset {
+  id: string;
+  title: string;
+  prompt: string;
+  isBuiltIn?: boolean;
+}
+
+const DEFAULT_PRESETS: SystemPromptPreset[] = [
+  {
+    id: 'general',
+    title: 'General AI Assistant',
+    prompt: 'You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible, while being safe.',
+    isBuiltIn: true
+  },
+  {
+    id: 'coding',
+    title: 'Software Engineer',
+    prompt: 'You are an expert software engineer. Provide clean, efficient, well-documented, and production-ready code with concise explanations.',
+    isBuiltIn: true
+  },
+  {
+    id: 'creative',
+    title: 'Creative Writer',
+    prompt: 'You are a creative writer and storyteller. Use rich vocabulary, sensory details, and engaging narrative structures to craft vivid prose.',
+    isBuiltIn: true
+  },
+  {
+    id: 'academic',
+    title: 'Academic Tutor',
+    prompt: 'You are an encouraging academic tutor. Guide the student step-by-step to arrive at the solution. Ask clarifying questions to test their understanding.',
+    isBuiltIn: true
+  },
+  {
+    id: 'translator',
+    title: 'Strict Translator',
+    prompt: 'You are a professional translator. Translate the given text accurately and naturally, maintaining tone and style. Do not output any chatter or commentary.',
+    isBuiltIn: true
+  }
+];
+
+type Category = 'general' | 'models' | 'chat-ui' | 'parameters' | 'tts';
 
 export default function SettingsModal({ 
   settings, 
@@ -35,7 +75,108 @@ export default function SettingsModal({
   const [activeCategory, setActiveCategory] = React.useState<Category | null>(null);
   const [newModelName, setNewModelName] = React.useState('');
 
+  const [voices, setVoices] = React.useState<SpeechSynthesisVoice[]>([]);
+  const [isTestSpeaking, setIsTestSpeaking] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const updateVoices = () => {
+        setVoices(window.speechSynthesis.getVoices());
+      };
+      updateVoices();
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+      return () => {
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+    }
+  }, []);
+
+  const handleTestSpeech = () => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      toast.error('Web Speech API is not supported in this environment');
+      return;
+    }
+
+    if (isTestSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsTestSpeaking(false);
+      return;
+    }
+
+    const testPhrase = "Hello from Ollama Lab. This is an live preview of the text to speech settings.";
+    const utterance = new SpeechSynthesisUtterance(testPhrase);
+
+    if (formData.ttsVoiceURI) {
+      const selectedVoice = voices.find(v => v.voiceURI === formData.ttsVoiceURI);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+    }
+    
+    // Fallbacks if not set to ensure valid speech parameters
+    utterance.rate = formData.ttsSpeechRate !== undefined ? formData.ttsSpeechRate : 1.0;
+    utterance.pitch = formData.ttsSpeechPitch !== undefined ? formData.ttsSpeechPitch : 1.0;
+
+    const stopTest = () => setIsTestSpeaking(false);
+    utterance.onend = stopTest;
+    utterance.onerror = stopTest;
+
+    window.speechSynthesis.cancel();
+    setIsTestSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const [presets, setPresets] = React.useState<SystemPromptPreset[]>(() => {
+    const saved = localStorage.getItem('system_prompt_presets');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return [...DEFAULT_PRESETS, ...parsed.filter((p: any) => !p.isBuiltIn)];
+      } catch (e) {
+        return DEFAULT_PRESETS;
+      }
+    }
+    return DEFAULT_PRESETS;
+  });
+
+  const [newPresetTitle, setNewPresetTitle] = React.useState('');
+
+  const handleSavePreset = () => {
+    if (!newPresetTitle.trim()) {
+      toast.error('Please enter a title for the preset');
+      return;
+    }
+    if (!formData.systemPrompt.trim()) {
+      toast.error('Cannot save an empty system prompt as a preset');
+      return;
+    }
+
+    const newPreset: SystemPromptPreset = {
+      id: `preset_${Date.now()}`,
+      title: newPresetTitle.trim(),
+      prompt: formData.systemPrompt
+    };
+
+    const updated = [...presets, newPreset];
+    setPresets(updated);
+    const customPresetsOnly = updated.filter(p => !p.isBuiltIn);
+    localStorage.setItem('system_prompt_presets', JSON.stringify(customPresetsOnly));
+    setNewPresetTitle('');
+    toast.success(`Preset "${newPreset.title}" successfully saved!`);
+  };
+
+  const handleDeletePreset = (id: string, name: string) => {
+    const updated = presets.filter(p => p.id !== id);
+    setPresets(updated);
+    const customPresetsOnly = updated.filter(p => !p.isBuiltIn);
+    localStorage.setItem('system_prompt_presets', JSON.stringify(customPresetsOnly));
+    toast.info(`Preset "${name}" removed`);
+  };
+
   const handleExit = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     onSave(formData);
     toast.success('Configuration autosaved');
     onClose();
@@ -73,6 +214,12 @@ export default function SettingsModal({
       title: 'Neural Parameters',
       description: 'Fine-tune temperature profiles, dynamic top-P values, and context limits.',
       icon: Sliders,
+    },
+    {
+      id: 'tts' as Category,
+      title: 'Text-To-Speech (TTS)',
+      description: 'Configure audio playback engines, choose native or neural voices, customize speech pitch/rate, and toggle auto-speak.',
+      icon: Volume2,
     },
   ];
 
@@ -264,7 +411,86 @@ export default function SettingsModal({
                         value={formData.systemPrompt}
                         onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
                         className="w-full bg-black/10 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/50 transition-all min-h-[100px] resize-none"
+                        placeholder="e.g. You are a helpful assistant..."
                       />
+                    </div>
+
+                    {/* Presets Library */}
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Prompt Preset Library</span>
+                        <span className="text-[9px] font-medium text-neutral-500 italic">Select a preset to apply</span>
+                      </div>
+                      
+                      {/* Grid/feed of library options */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[180px] overflow-y-auto custom-scrollbar pr-1 pointer-events-auto">
+                        {presets.map((preset) => {
+                          const isActive = formData.systemPrompt === preset.prompt;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              className={cn(
+                                "group relative flex flex-col justify-between p-3 rounded-xl border transition-all text-left pointer-events-auto cursor-pointer outline-none focus:ring-2 focus:ring-[var(--accent)]/20",
+                                isActive 
+                                  ? "bg-[var(--accent)]/10 border-[var(--accent)]/40 text-[var(--accent)] shadow-sm"
+                                  : "bg-black/10 dark:bg-white/5 border-black/5 dark:border-white/10 text-neutral-400 hover:border-[var(--accent)]/30 hover:bg-black/15 dark:hover:bg-white/10"
+                              )}
+                              onClick={() => {
+                                setFormData({ ...formData, systemPrompt: preset.prompt });
+                                toast.success(`Applied "${preset.title}" preset`);
+                              }}
+                            >
+                              <div className="flex items-start justify-between min-w-0 w-full gap-2 mb-1.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <Bookmark className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-[var(--accent)]" : "text-neutral-500 group-hover:text-[var(--accent)]")} />
+                                  <span className={cn("text-[11px] font-bold uppercase tracking-wider truncate", isActive ? "text-[var(--text-main)]" : "text-neutral-400 group-hover:text-[var(--text-main)]")}>
+                                    {preset.title}
+                                  </span>
+                                </div>
+                                {preset.isBuiltIn ? (
+                                  <span className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest bg-black/10 dark:bg-white/5 px-1 py-0.5 rounded leading-none shrink-0 scale-90">built-in</span>
+                                ) : (
+                                  <span
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeletePreset(preset.id, preset.title);
+                                    }}
+                                    className="p-1 -m-1 rounded text-neutral-500 hover:text-red-500 hover:bg-red-500/10 transition-colors inline-block pointer-events-auto shrink-0"
+                                    title="Delete custom preset"
+                                    role="button"
+                                    aria-label="Delete preset"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed font-medium">
+                                {preset.prompt}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Add current system prompt to presets */}
+                      <div className="pt-2 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={newPresetTitle}
+                          onChange={(e) => setNewPresetTitle(e.target.value)}
+                          placeholder="Enter preset name..."
+                          className="flex-1 bg-black/10 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-[var(--text-main)] placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-[var(--accent)]/50 focus:border-[var(--accent)]/50 transition-all font-semibold"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSavePreset}
+                          className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--accent-text)] text-xs font-bold uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all cursor-pointer whitespace-nowrap shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Save Prompt
+                        </button>
+                      </div>
                     </div>
                   </section>
 
@@ -577,6 +803,190 @@ export default function SettingsModal({
                       </div>
                     </div>
                   </div>
+                </section>
+              )}
+
+              {/* Category 5: Text-to-Speech (TTS) */}
+              {activeCategory === 'tts' && (
+                <section className="space-y-6">
+                  {/* Active Engine Selection */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-neutral-400">
+                      <AudioLines className="w-4 h-4 text-[var(--accent)]" />
+                      <h3 className="text-[10px] uppercase font-bold tracking-widest">Playback Voice Engine</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {[
+                        { id: 'none', title: 'Muted', desc: 'No voice synthesis output', icon: X },
+                        { id: 'web-speech', title: 'Web Speech', desc: 'Native browser synthesis (Instant)', icon: Volume2 },
+                        { id: 'onnx-sherpa', title: 'ONNX Neural', desc: 'Local Sherpa VITS worker models', icon: Headphones }
+                      ].map((eng) => {
+                        const isSel = formData.ttsEngine === eng.id;
+                        return (
+                          <button
+                            key={eng.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, ttsEngine: eng.id as any })}
+                            className={cn(
+                              "flex flex-col text-left p-4 rounded-xl border transition-all relative overflow-hidden group outline-none focus:ring-2 focus:ring-[var(--accent)]/20 cursor-pointer active:scale-[0.98]",
+                              isSel
+                                ? "bg-[var(--accent)]/10 border-[var(--accent)]/60 text-[var(--text-main)] shadow-sm"
+                                : "bg-black/10 dark:bg-white/5 border-black/5 dark:border-white/10 text-neutral-400 hover:border-[var(--accent)]/30 hover:bg-black/15 dark:hover:bg-white/10"
+                            )}
+                          >
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <eng.icon className={cn("w-4 h-4", isSel ? "text-[var(--accent)]" : "text-neutral-500")} />
+                              <span className={cn("text-[11px] font-bold uppercase tracking-wider", isSel ? "text-[var(--text-main)]" : "text-neutral-400")}>{eng.title}</span>
+                            </div>
+                            <p className="text-[9px] leading-relaxed text-neutral-500 dark:text-neutral-400 font-medium">
+                              {eng.desc}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Web Speech Engine Controls */}
+                  {formData.ttsEngine === 'web-speech' && (
+                    <div className="space-y-5 p-4 bg-black/10 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl space-y-4 animate-fade-in">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-neutral-400 px-1 uppercase tracking-wider">Select Accent/Voice</label>
+                        <select
+                          value={formData.ttsVoiceURI}
+                          onChange={(e) => setFormData({ ...formData, ttsVoiceURI: e.target.value })}
+                          className="w-full bg-black/20 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/50 transition-all font-semibold outline-none"
+                        >
+                          <option value="">Browser Default Voice</option>
+                          {voices.map((voice) => (
+                            <option key={voice.voiceURI} value={voice.voiceURI}>
+                              {voice.name} ({voice.lang}) {voice.localService ? '• Local' : ''}
+                            </option>
+                          ))}
+                        </select>
+                        {voices.length === 0 && (
+                          <p className="text-[9px] text-neutral-500 italic px-1">
+                            Querying system voice synthesizers... If list is empty, ensure speech is enabled on your device.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Sliders in visual grids */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center px-1">
+                            <label className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Speech Speed (Rate)</label>
+                            <span className="text-[9px] font-mono font-bold text-[var(--accent)]">{formData.ttsSpeechRate || 1.0}x</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0.5"
+                            max="2.0"
+                            step="0.1"
+                            value={formData.ttsSpeechRate !== undefined ? formData.ttsSpeechRate : 1.0}
+                            onChange={(e) => setFormData({ ...formData, ttsSpeechRate: parseFloat(e.target.value) })}
+                            className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent)]"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center px-1">
+                            <label className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Tone (Pitch)</label>
+                            <span className="text-[9px] font-mono font-bold text-[var(--accent)]">{formData.ttsSpeechPitch || 1.0}x</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0.5"
+                            max="2.0"
+                            step="0.1"
+                            value={formData.ttsSpeechPitch !== undefined ? formData.ttsSpeechPitch : 1.0}
+                            onChange={(e) => setFormData({ ...formData, ttsSpeechPitch: parseFloat(e.target.value) })}
+                            className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent)]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Playground button */}
+                      <button
+                        type="button"
+                        onClick={handleTestSpeech}
+                        className={cn(
+                          "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border font-bold text-xs uppercase tracking-widest transition-all cursor-pointer active:scale-98",
+                          isTestSpeaking
+                            ? "bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-500/15"
+                            : "bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/15"
+                        )}
+                      >
+                        {isTestSpeaking ? (
+                          <>
+                            <Square className="w-3.5 h-3.5 fill-red-500 text-red-500 animate-pulse" />
+                            <span>Stop Audition</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>Audition Selected Accent</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ONNX Sherpa Engine Explanation & Model Weights Controller */}
+                  {formData.ttsEngine === 'onnx-sherpa' && (
+                    <div className="space-y-4 p-4 bg-black/10 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl animate-fade-in text-left">
+                      <div className="flex items-start gap-2.5 text-neutral-400 border-b border-black/5 dark:border-white/5 pb-3">
+                        <Sparkles className="w-4.5 h-4.5 shrink-0 text-[var(--accent)]" />
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-main)]">Sherpa ONNX Neural Engine</span>
+                          <p className="text-[9px] text-neutral-500 mt-0.5 leading-relaxed font-semibold">
+                            Execute next-generation neural VITS model files natively inside the browser via IndexedDB cache models. Zero third-party cloud data transmission.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Selected Neural Weights Selector */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-neutral-400 px-1 uppercase tracking-wider">Neural Voice Model Selection</label>
+                        <select
+                          value={formData.ttsOnnxModel}
+                          onChange={(e) => setFormData({ ...formData, ttsOnnxModel: e.target.value })}
+                          className="w-full bg-black/20 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/50 transition-all font-semibold outline-none"
+                        >
+                          <option value="vits-en-en_US-ljspeech-high">LJ Speech English (High Fidelity - Female)</option>
+                          <option value="vits-en-en_US-cmu-arctic-male">CMU Arctic US Accent (High Fidelity - Male)</option>
+                          <option value="vits-en-en_US-cmu-arctic-female">CMU Arctic US Accent (High Fidelity - Female)</option>
+                          <option value="vits-zh-zh_CN-single-female">Mandarin Chinese (Standard Female)</option>
+                          <option value="vits-es-es_ES-single-male">Castilian Spanish (Standard Male)</option>
+                        </select>
+                      </div>
+
+                      {/* Educational info / Advanced control panel */}
+                      <div className="p-3 bg-black/10 dark:bg-black/30 border border-black/5 dark:border-white/5 rounded-lg space-y-2">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--accent)]">Execution Pipeline Profile</span>
+                        <p className="text-[9px] text-neutral-500 dark:text-neutral-400 font-medium leading-relaxed">
+                          - **Web Assembly Execution**: Multi-thread Web-Worker pipeline.<br />
+                          - **Offline Cache Status**: Models are loaded dynamically from CDN and secured inside IndexedDB. Subsequent loads take &lt; 50ms offline.<br />
+                          - **In-App Controls**: Sound synthesis uses Web Audio floating-point buffers with low-latency resampler algorithms.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Auto-Speak Toggle */}
+                  <label className="flex items-center justify-between p-4 bg-black/10 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-xl cursor-pointer hover:bg-black/15 dark:hover:bg-white/10 transition-all">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-main)]">Auto-Speak Incoming Chat</span>
+                      <span className="text-[9px] text-neutral-500 font-semibold tracking-normal mt-0.5">Stream or synthesise speech output automatically when assistant returns a message</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={formData.ttsAutoSpeak === true}
+                      onChange={(e) => setFormData({ ...formData, ttsAutoSpeak: e.target.checked })}
+                      className="w-10 h-5 bg-black/20 dark:bg-white/20 rounded-full appearance-none checked:bg-[var(--accent)] transition-all relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-white before:rounded-full before:top-0.5 before:left-0.5 checked:before:left-5.5 before:transition-all"
+                    />
+                  </label>
                 </section>
               )}
             </div>
