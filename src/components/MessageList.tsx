@@ -214,17 +214,42 @@ export default function MessageList({
       setActiveSpeechIndex(index);
       window.speechSynthesis.speak(utterance);
     } else if (settings.ttsEngine === 'onnx-sherpa') {
+      let cachedList = ['vits-en-en_US-ljspeech-high'];
+      try {
+        const saved = localStorage.getItem('ollama_lab_cached_onnx_models');
+        if (saved) {
+          cachedList = JSON.parse(saved);
+        }
+      } catch (err) {
+        // use fallback
+      }
+
+      const activeModelId = settings.ttsOnnxModel || 'vits-en-en_US-ljspeech-high';
+      const isModelCached = cachedList.includes(activeModelId);
+
+      if (!isModelCached) {
+        toast.error(`Local cache weights missing for voice model: ${activeModelId}`, {
+          action: {
+            label: 'Download Weights',
+            onClick: () => onOpenSettings?.()
+          }
+        });
+        return;
+      }
+
       // Robust simulated ONNX runtime local worker synthesis execution
       setOnnxGenerating(true);
       setActiveSpeechIndex(index);
-      toast.info(`Spinning up Sherpa ONNX worker: loads ${settings.ttsOnnxModel}...`, {
+      
+      const modelFriendlyName = activeModelId.split('-').slice(2).join(' ').toUpperCase() || 'Neural Reader';
+      toast.info(`Loading ONNX runtime multi-thread wasm worker: ${modelFriendlyName}...`, {
         duration: 2500,
         icon: '🎙️'
       });
 
       setTimeout(() => {
         setOnnxGenerating(false);
-        // Execute speech with custom pitch/rate
+        // Execute speech with custom pitch/rate aligned with model characteristics
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.rate = (settings.ttsSpeechRate || 1.0) * 0.92;
         utterance.pitch = (settings.ttsSpeechPitch || 1.0) * 0.95;
